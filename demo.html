@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>emilli. — demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:         #080810;
+      --surface:    #0f0f1a;
+      --surface2:   #15152a;
+      --border:     rgba(255,255,255,0.07);
+      --text:       #e8e8f0;
+      --muted:      rgba(232,232,240,0.45);
+      --dim:        rgba(232,232,240,0.22);
+      --blue:       #7b9cff;
+      --blue-soft:  rgba(123,156,255,0.12);
+      --orange:     #D4693A;
+      --bx:         #7A1F1F;
+      --font:       'Lexend', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── SCREENS ──────────────────────────────────────────── */
+
+    .screen {
+      display: none;
+      min-height: 100svh;
+    }
+    .screen.active { display: flex; }
+
+    /* ─── GATE ─────────────────────────────────────────────── */
+
+    #screen-gate {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .gate-mark {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 56px;
+      opacity: 0.9;
+    }
+    .gate-mark .dot { color: var(--orange); }
+
+    .gate-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      padding: 0 24px;
+    }
+
+    .gate-label {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 4px;
+    }
+
+    .gate-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text);
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.12em;
+      transition: border-color 0.2s;
+    }
+    .gate-input:focus { border-color: rgba(123,156,255,0.35); }
+    .gate-input::placeholder { color: var(--dim); letter-spacing: 0.08em; }
+
+    .gate-btn {
+      width: 100%;
+      background: var(--blue);
+      color: #080810;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .gate-btn:hover { opacity: 0.88; }
+
+    .gate-error {
+      font-size: 11px;
+      color: #e07070;
+      letter-spacing: 0.04em;
+      min-height: 16px;
+      text-align: center;
+    }
+
+    /* ─── PERSONA SELECTOR ──────────────────────────────────── */
+
+    #screen-persona {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px 60px;
+      gap: 48px;
+    }
+
+    .persona-header { text-align: center; }
+
+    .persona-eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 16px;
+    }
+
+    .persona-title {
+      font-size: clamp(22px, 4vw, 34px);
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: var(--text);
+      max-width: 28ch;
+      margin: 0 auto;
+    }
+
+    .persona-cards {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 880px;
+      width: 100%;
+    }
+
+    .persona-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 260px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .persona-card:hover {
+      border-color: rgba(123,156,255,0.3);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+    .persona-card.selected {
+      border-color: var(--blue);
+      background: var(--surface2);
+    }
+
+    .pc-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .pc-tag {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue);
+    }
+    .pc-desc {
+      font-size: 13px;
+      font-weight: 300;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    /* Tweak area */
+    .pc-tweak {
+      margin-top: 4px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .persona-card.selected .pc-tweak { display: flex; }
+
+    .tweak-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tweak-val {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
+    .persona-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .start-btn {
+      background: var(--blue);
+      color: #080810;
+      border: none;
+      border-radius: 100px;
+      padding: 16px 48px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.2s;
+    }
+    .start-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .start-btn:hover { transform: translateY(-1px); }
+
+    .persona-note {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── PHONE WRAPPER ─────────────────────────────────────── */
+
+    #screen-phone {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      position: relative;
+    }
+
+    .phone-aura {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(100,130,255,0.10) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      max-height: 92svh;
+      background: var(--surface);
+      border-radius: 52px;
+      border: 8px solid #18182a;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.06),
+        0 40px 100px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dynamic island */
+    .phone-island {
+      position: absolute;
+      top: 13px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 36px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 20;
+    }
+
+    /* Status bar */
+    .status-bar {
+      height: 54px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 28px 8px;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      position: relative;
+      z-index: 10;
+    }
+    .status-time { font-size: 15px; font-weight: 600; }
+    .status-icons { display: flex; gap: 6px; align-items: center; }
+    .status-icons svg { width: 16px; height: 16px; fill: var(--text); }
+
+    /* Phone inner content area */
+    .phone-content {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ─── PHONE SCREENS ─────────────────────────────────────── */
+
+    .p-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 20px 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    .p-screen.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ─── CONNECT SCREEN ────────────────────────────────────── */
+
+    #p-connect {
+      justify-content: center;
+      gap: 32px;
+      padding: 40px 28px;
+    }
+
+    .connect-header { text-align: center; }
+
+    .connect-logo {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+    }
+    .connect-logo .dot { color: var(--orange); }
+
+    .connect-title {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .connect-sub {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .connect-items {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .connect-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: border-color 0.4s;
+    }
+    .connect-item.done { border-color: rgba(100,200,130,0.35); }
+
+    .ci-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .ci-info { flex: 1; }
+    .ci-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .ci-type { font-size: 11px; font-weight: 300; color: var(--muted); margin-top: 1px; }
+
+    .ci-status {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.4s;
+    }
+    .connect-item.done .ci-status { color: #6dc88a; }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .check-icon { display: none; font-size: 14px; }
+    .connect-item.done .spinner { display: none; }
+    .connect-item.done .check-icon { display: inline; }
+
+    .connect-progress {
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .connect-progress-bar {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+
+    /* ─── SUMMARY SCREEN ────────────────────────────────────── */
+
+    #p-summary {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .summary-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 20px 100px;
+      scrollbar-width: none;
+    }
+    .summary-scroll::-webkit-scrollbar { display: none; }
+
+    .summary-greeting {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .summary-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.025em;
+      margin-bottom: 24px;
+    }
+
+    .summary-total-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 6px;
+    }
+
+    .summary-total {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .summary-sub-total {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .summary-section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+
+    .account-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .ac-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .ac-info { flex: 1; }
+    .ac-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .ac-sub { font-size: 11px; font-weight: 300; color: var(--muted); margin-top: 1px; }
+
+    .ac-amount {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .ac-currency {
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--muted);
+      display: block;
+      text-align: right;
+    }
+
+    /* Emilli entry bubble on summary */
+    .emilli-entry {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, var(--surface) 60%, transparent);
+      padding: 40px 20px 24px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      pointer-events: none;
+    }
+    .emilli-entry.show {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .emilli-bubble {
+      background: var(--surface2);
+      border: 1px solid rgba(123,156,255,0.2);
+      border-radius: 18px 18px 18px 4px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .eb-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .eb-aura {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123,156,255,0.8) 0%, rgba(123,156,255,0.2) 60%, transparent 100%);
+      flex-shrink: 0;
+    }
+
+    .eb-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--blue);
+      letter-spacing: 0.04em;
+    }
+
+    .eb-text {
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .reply-prompt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 11px 16px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .reply-prompt:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(123,156,255,0.25);
+    }
+    .reply-prompt span {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--dim);
+      flex: 1;
+    }
+    .reply-arrow {
+      font-size: 14px;
+      color: var(--blue);
+      opacity: 0.7;
+    }
+
+    /* ─── CHAT SCREEN ───────────────────────────────────────── */
+
+    #p-chat {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      padding: 12px 20px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .chat-back {
+      font-size: 13px;
+      color: var(--blue);
+      cursor: pointer;
+      padding: 4px 0;
+      background: none;
+      border: none;
+      font-family: var(--font);
+    }
+
+    .chat-aura-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123,156,255,0.7) 0%, rgba(123,156,255,0.15) 60%, transparent 100%);
+      flex-shrink: 0;
+    }
+
+    .chat-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .chat-demo-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--orange);
+      background: rgba(212,105,58,0.12);
+      padding: 3px 8px;
+      border-radius: 100px;
+      border: 1px solid rgba(212,105,58,0.2);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scrollbar-width: none;
+    }
+    .chat-messages::-webkit-scrollbar { display: none; }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+      gap: 3px;
+    }
+    .msg.emilli { align-self: flex-start; }
+    .msg.user { align-self: flex-end; }
+
+    .msg-bubble {
+      padding: 11px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.58;
+    }
+
+    .msg.emilli .msg-bubble {
+      background: var(--surface2);
+      border: 1px solid rgba(123,156,255,0.15);
+      border-bottom-left-radius: 4px;
+      color: var(--text);
+    }
+
+    .msg.user .msg-bubble {
+      background: rgba(123,156,255,0.15);
+      border: 1px solid rgba(123,156,255,0.25);
+      border-bottom-right-radius: 4px;
+      color: var(--text);
+    }
+
+    .msg-sender {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 0 2px;
+    }
+    .msg.emilli .msg-sender { color: rgba(123,156,255,0.5); }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border: 1px solid rgba(123,156,255,0.15);
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      max-width: 72px;
+    }
+    .typing-indicator.show { display: flex; }
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: blink 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Mandate card */
+    .mandate-card {
+      margin: 4px 0;
+      background: linear-gradient(135deg, rgba(123,156,255,0.08), rgba(100,80,200,0.06));
+      border: 1px solid rgba(123,156,255,0.2);
+      border-radius: 16px;
+      padding: 16px;
+      align-self: flex-start;
+      max-width: 90%;
+      display: none;
+    }
+    .mandate-card.show { display: block; }
+
+    .mandate-text {
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .mandate-actions { display: flex; gap: 8px; }
+
+    .mandate-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .mandate-btn:hover { opacity: 0.85; }
+    .mandate-btn.yes { background: var(--blue); color: #080810; }
+    .mandate-btn.no { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    /* Mandate email form */
+    .mandate-form {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .mandate-form.show { display: flex; }
+
+    .mandate-form input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .mandate-form input:focus { border-color: rgba(123,156,255,0.4); }
+    .mandate-form input::placeholder { color: var(--dim); }
+
+    .mandate-submit {
+      background: var(--blue);
+      color: #080810;
+      border: none;
+      border-radius: 10px;
+      padding: 11px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mandate-thanks {
+      display: none;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    .mandate-thanks.show { display: block; }
+
+    /* Chat input */
+    .chat-input-area {
+      padding: 10px 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 11px 16px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text);
+      outline: none;
+      resize: none;
+      max-height: 100px;
+      line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    .chat-input:focus { border-color: rgba(123,156,255,0.3); }
+    .chat-input::placeholder { color: var(--dim); }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    .send-btn:hover { opacity: 0.85; }
+    .send-btn:disabled { opacity: 0.35; cursor: default; }
+    .send-btn svg { width: 16px; height: 16px; fill: #080810; }
+
+    .chat-cap-note {
+      text-align: center;
+      font-size: 10px;
+      color: var(--dim);
+      padding: 4px 0 0;
+      letter-spacing: 0.04em;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      font-size: 10px;
+      color: var(--dim);
+      text-align: center;
+      padding: 6px 20px 4px;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────── */
+
+    @media (max-width: 440px) {
+      .phone-frame {
+        width: 100vw;
+        height: 100svh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        max-height: 100svh;
+      }
+      #screen-phone {
+        padding: 0;
+      }
+      .phone-aura { display: none; }
+    }
+
+    @media (max-height: 900px) and (min-width: 441px) {
+      .phone-frame {
+        width: 360px;
+        height: 780px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── GATE ───────────────────────────────────────────────── -->
+  <div id="screen-gate" class="screen active">
+    <p class="gate-mark">emilli<span class="dot">.</span></p>
+    <div class="gate-box">
+      <p class="gate-label">Access code</p>
+      <input
+        id="gate-input"
+        class="gate-input"
+        type="password"
+        placeholder="· · · · · · · ·"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="gate-btn" id="gate-btn">Enter demo</button>
+      <p class="gate-error" id="gate-error"></p>
+    </div>
+  </div>
+
+  <!-- ─── PERSONA SELECTOR ───────────────────────────────────── -->
+  <div id="screen-persona" class="screen">
+    <div class="persona-header">
+      <p class="persona-eyebrow">emilli. — interactive demo</p>
+      <h1 class="persona-title">Choose a financial picture to explore</h1>
+    </div>
+
+    <div class="persona-cards">
+
+      <!-- Carl -->
+      <div class="persona-card" data-persona="carl" onclick="selectPersona(this)">
+        <div>
+          <p class="pc-tag">Active investor · 29</p>
+          <p class="pc-name">Carl, Stockholm</p>
+        </div>
+        <p class="pc-desc">Nordnet stock picker. High financial literacy. Has an old Avanza account he never integrated and a pension he's never looked at.</p>
+      </div>
+
+      <!-- Sara -->
+      <div class="persona-card" data-persona="sara" onclick="selectPersona(this)">
+        <div>
+          <p class="pc-tag">Finance lawyer · 34</p>
+          <p class="pc-name">Sara, Stockholm</p>
+        </div>
+        <p class="pc-desc">Compliance rules make active investing nearly impossible. Salary accumulates in a current account. High earner, effectively uninvested.</p>
+        <div class="pc-tweak">
+          <div class="tweak-label">
+            <span>Cash sitting idle</span>
+            <span class="tweak-val" id="sara-val">SEK 520,000</span>
+          </div>
+          <input type="range" id="sara-range" min="1" max="10" value="5"
+            oninput="updateSaraVal(this.value)">
+        </div>
+      </div>
+
+      <!-- Erik -->
+      <div class="persona-card" data-persona="erik" onclick="selectPersona(this)">
+        <div>
+          <p class="pc-tag">Multi-bank tangle · 43</p>
+          <p class="pc-name">Erik, Göteborg</p>
+        </div>
+        <p class="pc-desc">Mortgage tied him to SEB. Has Avanza for investments. Has a Nordea account he forgot to close. Never seen it all in one place.</p>
+        <div class="pc-tweak">
+          <div class="tweak-label">
+            <span>Number of institutions</span>
+            <span class="tweak-val" id="erik-val">3</span>
+          </div>
+          <input type="range" id="erik-range" min="2" max="4" value="3" step="1"
+            oninput="document.getElementById('erik-val').textContent = this.value">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="persona-cta">
+      <button class="start-btn" id="start-btn" onclick="startDemo()">Start →</button>
+      <p class="persona-note" id="loading-note" style="display:none;color:var(--blue)">Fetching live market data…</p>
+      <p class="persona-note">Fictional data only &nbsp;·&nbsp; Not financial advice</p>
+    </div>
+  </div>
+
+  <!-- ─── PHONE ──────────────────────────────────────────────── -->
+  <div id="screen-phone" class="screen">
+    <div class="phone-aura"></div>
+    <div class="phone-frame">
+      <div class="phone-island"></div>
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span class="status-time" id="status-time">9:41</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        </div>
+      </div>
+
+      <div class="phone-content">
+        <!-- Connect screen -->
+        <div class="p-screen active" id="p-connect">
+          <div class="connect-header">
+            <div class="connect-logo">emilli<span class="dot">.</span></div>
+            <h2 class="connect-title">Connecting your accounts</h2>
+            <p class="connect-sub">Fetching a read-only view of your financial picture.</p>
+          </div>
+          <div class="connect-items" id="connect-items"></div>
+          <div class="connect-progress">
+            <div class="connect-progress-bar" id="connect-bar"></div>
+          </div>
+        </div>
+
+        <!-- Summary screen -->
+        <div class="p-screen" id="p-summary">
+          <div class="summary-scroll" id="summary-scroll"></div>
+          <div class="emilli-entry" id="emilli-entry">
+            <div class="emilli-bubble">
+              <div class="eb-header">
+                <div class="eb-aura"></div>
+                <span class="eb-name">emilli.</span>
+              </div>
+              <p class="eb-text" id="emilli-opener"></p>
+            </div>
+            <div class="reply-prompt" onclick="openChat()">
+              <span>Reply...</span>
+              <span class="reply-arrow">↑</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat screen -->
+        <div class="p-screen" id="p-chat">
+          <div class="chat-header">
+            <button class="chat-back" onclick="showSummary()">← Back</button>
+            <div class="chat-aura-sm"></div>
+            <span class="chat-title">emilli.</span>
+            <span class="chat-demo-badge">DEMO</span>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <div class="typing-indicator" id="typing">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+          <div class="mandate-card" id="mandate-card">
+            <p class="mandate-text">Most people I talk to reach a point where they'd rather not make these calls themselves.<br><br>Is that where you are?</p>
+            <div class="mandate-actions" id="mandate-actions">
+              <button class="mandate-btn yes" onclick="handleMandate(true)">That's me</button>
+              <button class="mandate-btn no" onclick="handleMandate(false)">Not yet</button>
+            </div>
+            <div class="mandate-form" id="mandate-form">
+              <input type="email" id="mandate-email" placeholder="your@email.com" autocomplete="email">
+              <button class="mandate-submit" onclick="submitMandate()">Notify me when it opens</button>
+            </div>
+            <p class="mandate-thanks" id="mandate-thanks">We'll reach out when active mandates open. Until then — ask me anything about your picture.</p>
+          </div>
+          <p class="disclaimer">Demo data only. Nothing here constitutes financial advice.</p>
+          <div class="chat-input-area">
+            <textarea
+              class="chat-input"
+              id="chat-input"
+              placeholder="Reply to emilli..."
+              rows="1"
+              onkeydown="handleKey(event)"
+              oninput="autoResize(this)"
+            ></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+          </div>
+          <p class="chat-cap-note" id="cap-note"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── CONFIG ───────────────────────────────────────────────
+
+    const PASS_HASH = btoa('emilli2026'); // change password by updating this value
+
+    const MAX_MESSAGES = 15;
+
+    const saraCashValues = [100000, 150000, 200000, 280000, 360000, 520000, 620000, 720000, 800000];
+
+    function updateSaraVal(v) {
+      const val = saraCashValues[parseInt(v) - 1];
+      document.getElementById('sara-val').textContent = 'SEK ' + val.toLocaleString('sv-SE');
+    }
+
+    // ─── STATE ────────────────────────────────────────────────
+
+    let state = {
+      persona: null,
+      tweakValue: null,
+      portfolioPromptText: null,
+      messages: [],        // { role, content }
+      userTurns: 0,
+      mandateShown: false,
+    };
+
+    // ─── GATE ─────────────────────────────────────────────────
+
+    document.getElementById('gate-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') attemptGate();
+    });
+    document.getElementById('gate-btn').addEventListener('click', attemptGate);
+
+    function attemptGate() {
+      const val = document.getElementById('gate-input').value.trim();
+      if (btoa(val) === PASS_HASH) {
+        showScreen('persona');
+        sessionStorage.setItem('emilli-demo-auth', '1');
+      } else {
+        const err = document.getElementById('gate-error');
+        err.textContent = 'Incorrect access code.';
+        setTimeout(() => err.textContent = '', 2500);
+        document.getElementById('gate-input').value = '';
+      }
+    }
+
+    // Skip gate if already authed this session
+    if (sessionStorage.getItem('emilli-demo-auth')) showScreen('persona');
+
+    // ─── SCREEN TRANSITIONS ───────────────────────────────────
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + id).classList.add('active');
+    }
+
+    function showPhoneScreen(id) {
+      document.querySelectorAll('.p-screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('p-' + id).classList.add('active');
+    }
+
+    // ─── PERSONA SELECTION ────────────────────────────────────
+
+    function selectPersona(card) {
+      document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.persona = card.dataset.persona;
+      document.getElementById('start-btn').classList.add('visible');
+    }
+
+    // ─── PERSONA DATA ─────────────────────────────────────────
+
+    const PERSONA_DATA = {
+      carl: () => ({
+        name: 'Carl',
+        greeting: 'Good morning,',
+        total: 'SEK 230,000',
+        totalSub: '+ pension SEK 67,000',
+        accounts: [
+          { icon: 'N', color: '#1a3a6c', name: 'Nordnet ISK', sub: '14 positions · Swedish stocks + 1 ETF', amount: '187,000', currency: 'SEK' },
+          { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: '2 index funds · Untouched since 2022', amount: '43,000', currency: 'SEK' },
+        ],
+        pension: [
+          { icon: 'F', color: '#4a3080', name: 'Folksam ITP', sub: 'Employer pension · Default fund', amount: '67,000', currency: 'SEK' },
+        ],
+        opener: 'Your top three positions are all Swedish industrials. That\'s not just company concentration — it\'s sector and geography stacked. Was that a deliberate thesis?',
+        connections: [
+          { icon: 'N', color: '#1a3a6c', name: 'Nordnet', type: 'ISK account' },
+          { icon: 'A', color: '#2c6e2c', name: 'Avanza', type: 'Investment account' },
+          { icon: 'F', color: '#4a3080', name: 'Folksam', type: 'Pension (ITP)' },
+        ],
+      }),
+      sara: (idleCash) => {
+        const loss = Math.round((idleCash * 0.029) / 1000) * 1000;
+        const cashStr = idleCash.toLocaleString('sv-SE');
+        const lossStr = loss.toLocaleString('sv-SE');
+        const total = idleCash + 78000 + 31000;
+        return {
+          name: 'Sara',
+          greeting: 'Good morning,',
+          total: 'SEK ' + total.toLocaleString('sv-SE'),
+          totalSub: '+ pension SEK 89,000',
+          accounts: [
+            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Current account · Tied to mortgage', amount: cashStr, currency: 'SEK' },
+            { icon: 'SW', color: '#e8000d', name: 'Swedbank', sub: 'Savings account', amount: '78,000', currency: 'SEK' },
+            { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: 'Index funds · Untouched since 2021', amount: '31,000', currency: 'SEK' },
+          ],
+          pension: [
+            { icon: 'F', color: '#4a3080', name: 'Folksam ITP', sub: 'Employer pension · Default fund', amount: '89,000', currency: 'SEK' },
+          ],
+          opener: `You have SEK ${cashStr} in a current account. At current inflation that's losing roughly SEK ${lossStr} in real value each year. Is that a deliberate choice?`,
+          connections: [
+            { icon: 'S', color: '#003087', name: 'SEB', type: 'Current + mortgage' },
+            { icon: 'SW', color: '#e8000d', name: 'Swedbank', type: 'Savings account' },
+            { icon: 'A', color: '#2c6e2c', name: 'Avanza', type: 'Investment account' },
+            { icon: 'F', color: '#4a3080', name: 'Folksam', type: 'Pension (ITP)' },
+          ],
+        };
+      },
+      erik: (numBanks) => {
+        const extraAccounts = [];
+        if (numBanks >= 3) extraAccounts.push({ icon: 'NB', color: '#003087', name: 'Nordea', sub: 'Old account · Never closed', amount: '44,000', currency: 'SEK' });
+        if (numBanks >= 4) extraAccounts.push({ icon: 'HB', color: '#00205b', name: 'Handelsbanken', sub: 'Forgotten joint account', amount: '12,000', currency: 'SEK' });
+        const total = 210000 + 340000 + (numBanks >= 3 ? 44000 : 0) + (numBanks >= 4 ? 12000 : 0);
+        return {
+          name: 'Erik',
+          greeting: 'Good morning,',
+          total: 'SEK ' + total.toLocaleString('sv-SE'),
+          totalSub: '+ pension SEK 680,000 · Flat ~SEK 4,200,000',
+          accounts: [
+            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Savings + mortgage SEK 2,400,000', amount: '210,000', currency: 'SEK' },
+            { icon: 'AV', color: '#2c6e2c', name: 'Avanza', sub: 'Funds + single stocks', amount: '340,000', currency: 'SEK' },
+            ...extraAccounts,
+          ],
+          pension: [
+            { icon: 'AM', color: '#c8102e', name: 'AMF Tjänstepension', sub: 'Occupational pension', amount: '680,000', currency: 'SEK' },
+          ],
+          opener: `You have accounts at ${numBanks} banks. Have you ever seen your full picture in one place?`,
+          connections: [
+            { icon: 'S', color: '#003087', name: 'SEB', type: 'Savings + mortgage' },
+            { icon: 'AV', color: '#2c6e2c', name: 'Avanza', type: 'Investment account' },
+            ...(numBanks >= 3 ? [{ icon: 'NB', color: '#003087', name: 'Nordea', type: 'Savings account' }] : []),
+            ...(numBanks >= 4 ? [{ icon: 'HB', color: '#00205b', name: 'Handelsbanken', type: 'Joint account' }] : []),
+            { icon: 'AM', color: '#c8102e', name: 'AMF', type: 'Pension' },
+          ],
+        };
+      },
+    };
+
+    function getTweakValue() {
+      if (state.persona === 'sara') return saraCashValues[parseInt(document.getElementById('sara-range').value) - 1];
+      if (state.persona === 'erik') return parseInt(document.getElementById('erik-range').value);
+      return null;
+    }
+
+    function getPersonaData() {
+      const tv = getTweakValue();
+      state.tweakValue = tv;
+      const builder = PERSONA_DATA[state.persona];
+      return state.persona === 'carl' ? builder() : builder(tv);
+    }
+
+    // ─── START DEMO ───────────────────────────────────────────
+
+    async function startDemo() {
+      if (!state.persona) return;
+
+      const btn = document.getElementById('start-btn');
+      const loadingNote = document.getElementById('loading-note');
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      loadingNote.style.display = 'block';
+
+      // Fetch live portfolio data
+      try {
+        const res = await fetch('/api/portfolio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ personaId: state.persona }),
+        });
+        const portfolio = await res.json();
+        state.portfolioPromptText = portfolio.promptText ?? null;
+      } catch {
+        state.portfolioPromptText = null; // chat.js will reject — handled below
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Start →';
+      loadingNote.style.display = 'none';
+
+      if (!state.portfolioPromptText) {
+        loadingNote.style.display = 'block';
+        loadingNote.style.color = '#e07070';
+        loadingNote.textContent = 'Could not load market data. Try again.';
+        setTimeout(() => {
+          loadingNote.style.display = 'none';
+          loadingNote.style.color = 'var(--blue)';
+          loadingNote.textContent = 'Fetching live market data…';
+        }, 3000);
+        return;
+      }
+
+      showScreen('phone');
+      updateClock();
+      const data = getPersonaData();
+      runConnectionAnimation(data);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2, '0');
+      const m = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('status-time').textContent = `${h}:${m}`;
+    }
+
+    // ─── CONNECTION ANIMATION ─────────────────────────────────
+
+    function runConnectionAnimation(data) {
+      const container = document.getElementById('connect-items');
+      container.innerHTML = '';
+
+      data.connections.forEach(conn => {
+        const el = document.createElement('div');
+        el.className = 'connect-item';
+        el.innerHTML = `
+          <div class="ci-icon" style="background:${conn.color}">${conn.icon}</div>
+          <div class="ci-info">
+            <div class="ci-name">${conn.name}</div>
+            <div class="ci-type">${conn.type}</div>
+          </div>
+          <div class="ci-status">
+            <div class="spinner"></div>
+            <span class="check-icon">✓</span>
+            <span class="status-text">Connecting</span>
+          </div>`;
+        container.appendChild(el);
+      });
+
+      const items = container.querySelectorAll('.connect-item');
+      const bar = document.getElementById('connect-bar');
+      const total = items.length;
+
+      let i = 0;
+      function tick() {
+        if (i >= total) {
+          bar.style.width = '100%';
+          setTimeout(() => showSummaryScreen(data), 700);
+          return;
+        }
+        items[i].classList.add('done');
+        items[i].querySelector('.status-text').textContent = 'Connected';
+        bar.style.width = Math.round(((i + 1) / total) * 100) + '%';
+        i++;
+        setTimeout(tick, 750 + Math.random() * 400);
+      }
+      setTimeout(tick, 600);
+    }
+
+    // ─── SUMMARY SCREEN ───────────────────────────────────────
+
+    function showSummaryScreen(data) {
+      showPhoneScreen('summary');
+
+      const scroll = document.getElementById('summary-scroll');
+      scroll.innerHTML = `
+        <p class="summary-greeting">${data.greeting}</p>
+        <p class="summary-name">${data.name}.</p>
+        <p class="summary-total-label">Total investable assets</p>
+        <p class="summary-total">${data.total}</p>
+        <p class="summary-sub-total">${data.totalSub}</p>
+        <p class="summary-section-label">Accounts</p>
+        ${data.accounts.map(a => accountRow(a)).join('')}
+        <p class="summary-section-label">Pension</p>
+        ${data.pension.map(a => accountRow(a)).join('')}
+      `;
+
+      document.getElementById('emilli-opener').textContent = data.opener;
+
+      setTimeout(() => {
+        document.getElementById('emilli-entry').classList.add('show');
+      }, 900);
+    }
+
+    function accountRow(a) {
+      return `
+        <div class="account-row">
+          <div class="ac-icon" style="background:${a.color}">${a.icon}</div>
+          <div class="ac-info">
+            <div class="ac-name">${a.name}</div>
+            <div class="ac-sub">${a.sub}</div>
+          </div>
+          <div>
+            <div class="ac-amount">${a.amount}</div>
+            <span class="ac-currency">${a.currency}</span>
+          </div>
+        </div>`;
+    }
+
+    function showSummary() {
+      showPhoneScreen('summary');
+    }
+
+    // ─── CHAT ─────────────────────────────────────────────────
+
+    function openChat() {
+      showPhoneScreen('chat');
+      const data = getPersonaData();
+
+      // Reset state
+      state.messages = [];
+      state.userTurns = 0;
+      state.mandateShown = false;
+      document.getElementById('chat-messages').innerHTML = `
+        <div class="typing-indicator" id="typing">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>`;
+      document.getElementById('mandate-card').classList.remove('show');
+
+      // Seed with opener as first assistant message
+      const opener = data.opener;
+      state.messages.push({ role: 'assistant', content: opener });
+
+      setTimeout(() => {
+        document.getElementById('typing').classList.remove('show');
+        appendMessage('emilli', opener);
+        enableInput();
+      }, 1200);
+    }
+
+    function appendMessage(role, text) {
+      const container = document.getElementById('chat-messages');
+      const typing = document.getElementById('typing');
+
+      const div = document.createElement('div');
+      div.className = `msg ${role === 'emilli' ? 'emilli' : 'user'}`;
+      div.innerHTML = `
+        <span class="msg-sender">${role === 'emilli' ? 'emilli.' : 'You'}</span>
+        <div class="msg-bubble">${escapeHtml(text)}</div>`;
+
+      container.insertBefore(div, typing);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function enableInput() {
+      const input = document.getElementById('chat-input');
+      const btn = document.getElementById('send-btn');
+      input.disabled = false;
+      input.focus();
+      input.addEventListener('input', () => {
+        btn.disabled = input.value.trim().length === 0;
+      });
+      updateCapNote();
+    }
+
+    function updateCapNote() {
+      const note = document.getElementById('cap-note');
+      const remaining = MAX_MESSAGES - state.userTurns;
+      if (remaining <= 3) {
+        note.textContent = `${remaining} message${remaining !== 1 ? 's' : ''} remaining in this demo`;
+      } else {
+        note.textContent = '';
+      }
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const btn = document.getElementById('send-btn');
+      const text = input.value.trim();
+      if (!text || state.userTurns >= MAX_MESSAGES) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      btn.disabled = true;
+      input.disabled = true;
+
+      state.userTurns++;
+      state.messages.push({ role: 'user', content: text });
+      appendMessage('user', text);
+
+      updateCapNote();
+
+      if (state.userTurns >= MAX_MESSAGES) {
+        appendMessage('emilli', "We've reached the end of this demo. To keep the conversation going, request access at emilli.co.");
+        return;
+      }
+
+      const shouldTriggerMandate = state.userTurns === 4 && !state.mandateShown;
+
+      document.getElementById('typing').classList.add('show');
+      document.getElementById('chat-messages').scrollTop = 999999;
+
+      let reply = '';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            personaId: state.persona,
+            messages: state.messages,
+            portfolioPromptText: state.portfolioPromptText,
+            triggerMandate: shouldTriggerMandate,
+          }),
+        });
+        const data = await res.json();
+        reply = data.content || 'Something went wrong. Try again.';
+      } catch {
+        reply = 'Something went wrong. Try again.';
+      }
+
+      document.getElementById('typing').classList.remove('show');
+      state.messages.push({ role: 'assistant', content: reply });
+
+      if (shouldTriggerMandate) {
+        state.mandateShown = true;
+        appendMessage('emilli', reply);
+        setTimeout(() => {
+          document.getElementById('mandate-card').classList.add('show');
+          document.getElementById('chat-messages').scrollTop = 999999;
+        }, 400);
+      } else {
+        appendMessage('emilli', reply);
+      }
+
+      document.getElementById('chat-messages').scrollTop = 999999;
+      input.disabled = false;
+      input.focus();
+      btn.disabled = true;
+    }
+
+    // ─── MANDATE ──────────────────────────────────────────────
+
+    function handleMandate(yes) {
+      document.getElementById('mandate-actions').style.display = 'none';
+      if (yes) {
+        document.getElementById('mandate-form').classList.add('show');
+        document.getElementById('mandate-email').focus();
+      } else {
+        document.getElementById('mandate-card').classList.remove('show');
+      }
+    }
+
+    async function submitMandate() {
+      const email = document.getElementById('mandate-email').value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('mandate-email').focus();
+        return;
+      }
+      try {
+        await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'demo-mandate' }),
+        });
+      } catch {}
+      document.getElementById('mandate-form').classList.remove('show');
+      document.getElementById('mandate-thanks').classList.add('show');
+    }
+  </script>
+</body>
+</html>
