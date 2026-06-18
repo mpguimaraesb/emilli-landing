@@ -937,6 +937,19 @@
       letter-spacing: 0.04em;
     }
 
+    .script-skip {
+      padding: 12px 20px 20px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+    .script-skip:hover { color: var(--muted); }
+
     /* Disclaimer */
     .disclaimer {
       font-size: 10px;
@@ -1069,6 +1082,23 @@
       </div>
 
       <div class="phone-content">
+        <!-- Script screen -->
+        <div class="p-screen" id="p-script">
+          <div class="chat-header">
+            <div class="chat-aura-sm"></div>
+            <span class="chat-title">emilli.</span>
+            <span class="chat-demo-badge">DEMO</span>
+          </div>
+          <div class="chat-messages" id="script-messages">
+            <div class="typing-indicator" id="script-typing">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+          <div class="script-skip" id="script-skip" onclick="skipScript()">Skip intro ↓</div>
+        </div>
+
         <!-- Connect screen -->
         <div class="p-screen active" id="p-connect">
           <div class="connect-header">
@@ -1308,6 +1338,97 @@
       return state.persona === 'carl' ? builder() : builder(tv);
     }
 
+    // ─── SCRIPTS ──────────────────────────────────────────────
+
+    const SCRIPTS = {
+      carl: [
+        { role: 'emilli', text: 'From what you told me, you have a portfolio you manage actively at Nordnet and a separate Avanza account you haven\'t touched in years. Have you ever looked at both together?' },
+        { role: 'user',   text: 'Not really. I just treat them separately.' },
+        { role: 'emilli', text: 'And your pension is in there too — also untouched. Three pots, no shared picture. Let me connect everything.' },
+      ],
+      sara: [
+        { role: 'emilli', text: 'How long has your salary been sitting in a current account?' },
+        { role: 'user',   text: 'About two years. It\'s just easier given my compliance situation.' },
+        { role: 'emilli', text: 'This would unfortunately mean, two years of inflation playing against your financials. Let me show you what that picture actually looks like.' },
+      ],
+      erik: [
+        { role: 'emilli', text: 'You mentioned SEB, Avanza, and Nordea. When did you last have a view across all three?' },
+        { role: 'user',   text: 'I keep an excel sheet which I use to see my full picture, but it\'s definitely a lot of work.' },
+        { role: 'emilli', text: 'Let me give you back that time and make this easier for you, let\'s connect your accounts now.' },
+      ],
+    };
+
+    const PERSONA_FIRST_NAME = { carl: 'Carl', sara: 'Sara', erik: 'Erik' };
+
+    let scriptTimer = null;
+
+    function runScript(personaId, onComplete) {
+      showPhoneScreen('script');
+      const container = document.getElementById('script-messages');
+      const typing = document.getElementById('script-typing');
+      container.innerHTML = '';
+      container.appendChild(typing);
+      typing.classList.remove('show');
+
+      const steps = SCRIPTS[personaId];
+      const name = PERSONA_FIRST_NAME[personaId];
+      let cancelled = false;
+
+      // Store onComplete so skipScript can call it
+      window._scriptOnComplete = () => {
+        cancelled = true;
+        onComplete();
+      };
+
+      function delay(ms) {
+        return new Promise(res => { scriptTimer = setTimeout(res, ms); });
+      }
+
+      async function play() {
+        await delay(1000);
+
+        for (let i = 0; i < steps.length; i++) {
+          if (cancelled) return;
+          const step = steps[i];
+          const isEmilli = step.role === 'emilli';
+
+          // Typing indicator — anchor stays at bottom
+          typing.classList.add('show');
+          typing.style.alignSelf = 'flex-start';
+          container.scrollTop = container.scrollHeight;
+
+          const typingMs = Math.max(1600, step.text.length * 38);
+          await delay(typingMs);
+          if (cancelled) return;
+
+          typing.classList.remove('show');
+
+          const div = document.createElement('div');
+          div.className = `msg ${isEmilli ? 'emilli' : 'user'}`;
+          div.innerHTML = `
+            <span class="msg-sender">${isEmilli ? 'emilli.' : name}</span>
+            <div class="msg-bubble">${escapeHtml(step.text)}</div>`;
+          container.insertBefore(div, typing);
+          container.scrollTop = container.scrollHeight;
+
+          // Pause after message before next
+          const pauseMs = isEmilli ? 2800 : 2000;
+          await delay(pauseMs);
+          if (cancelled) return;
+        }
+
+        // Brief pause then hand off
+        await delay(1200);
+        if (!cancelled) onComplete();
+      }
+
+      play();
+    }
+
+    function skipScript() {
+      if (window._scriptOnComplete) window._scriptOnComplete();
+    }
+
     // ─── START DEMO ───────────────────────────────────────────
 
     async function startDemo() {
@@ -1351,7 +1472,7 @@
       showScreen('phone');
       updateClock();
       const data = getPersonaData();
-      runConnectionAnimation(data);
+      runScript(state.persona, () => runConnectionAnimation(data));
     }
 
     function updateClock() {
