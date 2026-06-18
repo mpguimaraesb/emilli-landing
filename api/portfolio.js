@@ -4,7 +4,7 @@
 
 const PORTFOLIO_DEFS = {
   carl: {
-    personaContext: `Carl, 29, Stockholm. Active stock picker. Uses Nordnet as primary broker (switched from Avanza for deeper research tools). Reads Dagens Industri, listens to Fill or Kill podcast. Self-taught, started during the Reddit/GameStop era. Now focuses on top European companies by market cap. Does 2-5% position sizing per name as a rule. Has an old Avanza account he never integrated into his strategy. Rents his apartment.`,
+    personaContext: `Carl, 29, Stockholm. Active stock picker. Uses Nordnet as primary broker (switched from Avanza for deeper research tools). Reads Dagens Industri, listens to Fill or Kill podcast. Self-taught, started during the Reddit/GameStop era. Now focuses on top European companies by market cap. Has an old Avanza account he never integrated into his strategy. Rents his apartment.`,
     accounts: [
       {
         label: 'Nordnet ISK',
@@ -288,7 +288,7 @@ function buildTensions(personaId, def, quotes) {
 
     t.push('Zero direct US equity exposure — global only via SEK 43,000 Avanza index funds alongside SEK 187,000 Nordnet portfolio');
     t.push('Avanza account (SEK 43,000) sits alongside Nordnet with no integrated strategy — two separate approaches that have never been looked at together');
-    t.push('Top 3 positions (Atlas Copco, Volvo, Hexagon) = ~37% — above his stated 2-5% per-name rule implies some positions have grown without being trimmed');
+    t.push('Top 3 positions (Atlas Copco 15%, Volvo 12%, Hexagon 10%) = 37% combined — professional portfolio management guidelines typically cap single-name exposure at 5%; all three exceed that threshold, suggesting positions have grown without being reviewed');
   }
 
   if (personaId === 'sara') {
