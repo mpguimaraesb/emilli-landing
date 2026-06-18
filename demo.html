@@ -344,6 +344,7 @@
       flex: 1;
       position: relative;
       overflow: hidden;
+      zoom: 0.8;
     }
 
     /* ─── PHONE SCREENS ─────────────────────────────────────── */
@@ -1021,7 +1022,7 @@
           <p class="pc-tag">Active investor · 29</p>
           <p class="pc-name">Carl, Stockholm</p>
         </div>
-        <p class="pc-desc">Nordnet stock picker. High financial literacy. Has an old Avanza account he never integrated and a pension he's never looked at.</p>
+        <p class="pc-desc">Nordnet stock picker. High financial literacy. Has an old Avanza account he's never integrated — two portfolios that have never been reviewed together.</p>
       </div>
 
       <!-- Sara -->
@@ -1047,7 +1048,7 @@
           <p class="pc-tag">Multi-bank tangle · 43</p>
           <p class="pc-name">Erik, Göteborg</p>
         </div>
-        <p class="pc-desc">Mortgage tied him to SEB. Has Avanza for investments. Has a Nordea account he forgot to close. Never seen it all in one place.</p>
+        <p class="pc-desc">Banking at SEB, investing at Avanza, a forgotten Nordea account. Apartment in Göteborg fully paid off. Never seen it all in one place.</p>
         <div class="pc-tweak">
           <div class="tweak-label">
             <span>Number of institutions</span>
@@ -1257,19 +1258,16 @@
         name: 'Carl',
         greeting: 'Good morning,',
         total: 'SEK 230,000',
-        totalSub: '+ pension SEK 67,000',
+        totalSub: '2 investment accounts',
         accounts: [
           { icon: 'N', color: '#1a3a6c', name: 'Nordnet ISK', sub: '14 positions · Swedish stocks + 1 ETF', amount: '187,000', currency: 'SEK' },
           { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: '2 index funds · Untouched since 2022', amount: '43,000', currency: 'SEK' },
         ],
-        pension: [
-          { icon: 'F', color: '#4a3080', name: 'Folksam ITP', sub: 'Employer pension · Default fund', amount: '67,000', currency: 'SEK' },
-        ],
+        property: null,
         opener: 'Your top three positions are all Swedish industrials. That\'s not just company concentration — it\'s sector and geography stacked. Was that a deliberate thesis?',
         connections: [
           { icon: 'N', color: '#1a3a6c', name: 'Nordnet', type: 'ISK account' },
           { icon: 'A', color: '#2c6e2c', name: 'Avanza', type: 'Investment account' },
-          { icon: 'F', color: '#4a3080', name: 'Folksam', type: 'Pension (ITP)' },
         ],
       }),
       sara: (idleCash) => {
@@ -1281,21 +1279,20 @@
           name: 'Sara',
           greeting: 'Good morning,',
           total: 'SEK ' + total.toLocaleString('sv-SE'),
-          totalSub: '+ pension SEK 89,000',
+          totalSub: 'Cash + investments · Property SEK 4,800,000',
           accounts: [
             { icon: 'S', color: '#003087', name: 'SEB', sub: 'Current account · Tied to mortgage', amount: cashStr, currency: 'SEK' },
             { icon: 'SW', color: '#e8000d', name: 'Swedbank', sub: 'Savings account', amount: '78,000', currency: 'SEK' },
             { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: 'Index funds · Untouched since 2021', amount: '31,000', currency: 'SEK' },
           ],
-          pension: [
-            { icon: 'F', color: '#4a3080', name: 'Folksam ITP', sub: 'Employer pension · Default fund', amount: '89,000', currency: 'SEK' },
+          property: [
+            { icon: 'H', color: '#5c3d1e', name: 'Apartment, Stockholm', sub: 'Mortgage SEK 2,900,000 · Equity SEK 1,900,000', amount: '4,800,000', currency: 'SEK' },
           ],
           opener: `You have SEK ${cashStr} in a current account. At current inflation that's losing roughly SEK ${lossStr} in real value each year. Is that a deliberate choice?`,
           connections: [
             { icon: 'S', color: '#003087', name: 'SEB', type: 'Current + mortgage' },
             { icon: 'SW', color: '#e8000d', name: 'Swedbank', type: 'Savings account' },
             { icon: 'A', color: '#2c6e2c', name: 'Avanza', type: 'Investment account' },
-            { icon: 'F', color: '#4a3080', name: 'Folksam', type: 'Pension (ITP)' },
           ],
         };
       },
@@ -1308,22 +1305,21 @@
           name: 'Erik',
           greeting: 'Good morning,',
           total: 'SEK ' + total.toLocaleString('sv-SE'),
-          totalSub: '+ pension SEK 680,000 · Flat ~SEK 4,200,000',
+          totalSub: 'Cash + investments · Property SEK 4,200,000',
           accounts: [
-            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Savings + mortgage SEK 2,400,000', amount: '210,000', currency: 'SEK' },
+            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Savings account', amount: '210,000', currency: 'SEK' },
             { icon: 'AV', color: '#2c6e2c', name: 'Avanza', sub: 'Funds + single stocks', amount: '340,000', currency: 'SEK' },
             ...extraAccounts,
           ],
-          pension: [
-            { icon: 'AM', color: '#c8102e', name: 'AMF Tjänstepension', sub: 'Occupational pension', amount: '680,000', currency: 'SEK' },
+          property: [
+            { icon: 'H', color: '#5c3d1e', name: 'Apartment, Göteborg', sub: 'Fully paid · Equity SEK 4,200,000', amount: '4,200,000', currency: 'SEK' },
           ],
           opener: `You have accounts at ${numBanks} banks. Have you ever seen your full picture in one place?`,
           connections: [
-            { icon: 'S', color: '#003087', name: 'SEB', type: 'Savings + mortgage' },
+            { icon: 'S', color: '#003087', name: 'SEB', type: 'Savings account' },
             { icon: 'AV', color: '#2c6e2c', name: 'Avanza', type: 'Investment account' },
             ...(numBanks >= 3 ? [{ icon: 'NB', color: '#003087', name: 'Nordea', type: 'Savings account' }] : []),
             ...(numBanks >= 4 ? [{ icon: 'HB', color: '#00205b', name: 'Handelsbanken', type: 'Joint account' }] : []),
-            { icon: 'AM', color: '#c8102e', name: 'AMF', type: 'Pension' },
           ],
         };
       },
@@ -1348,7 +1344,7 @@
       carl: [
         { role: 'emilli', text: 'From what you told me, you have a portfolio you manage actively at Nordnet and a separate Avanza account you haven\'t touched in years. Have you ever looked at both together?' },
         { role: 'user',   text: 'Not really. I just treat them separately.' },
-        { role: 'emilli', text: 'And your pension is in there too — also untouched. Three pots, no shared picture. Let me connect everything.' },
+        { role: 'emilli', text: 'Two accounts, two strategies, no shared picture. Let me connect everything and show you what you actually have.' },
       ],
       sara: [
         { role: 'emilli', text: 'How long has your salary been sitting in a current account?' },
@@ -1537,6 +1533,10 @@
     function showSummaryScreen(data) {
       showPhoneScreen('summary');
 
+      const propertySection = data.property && data.property.length
+        ? `<p class="summary-section-label">Property</p>${data.property.map(a => accountRow(a)).join('')}`
+        : '';
+
       const scroll = document.getElementById('summary-scroll');
       scroll.innerHTML = `
         <p class="summary-greeting">${data.greeting}</p>
@@ -1546,8 +1546,7 @@
         <p class="summary-sub-total">${data.totalSub}</p>
         <p class="summary-section-label">Accounts</p>
         ${data.accounts.map(a => accountRow(a)).join('')}
-        <p class="summary-section-label">Pension</p>
-        ${data.pension.map(a => accountRow(a)).join('')}
+        ${propertySection}
       `;
 
       document.getElementById('emilli-opener').textContent = data.opener;
@@ -1724,7 +1723,7 @@
     const MANDATE_NO_FOLLOWUP = {
       carl: 'Understood. Then let\'s look at what this picture is actually telling you. Your Nordnet and Avanza accounts have never been reviewed together — that\'s where I\'d start. What does your biggest position mean to you right now?',
       sara: 'Understood. Then let\'s work with what you have. The cash sitting idle is the clearest lever in your picture. What\'s stopped you from moving it so far?',
-      erik: 'Understood. Then let\'s look at what this picture is showing you. Three banks, a pension, a property — built up over years with no single review. What would you want to understand first?',
+      erik: 'Understood. Then let\'s look at what this picture is showing you. Accounts at multiple banks, an Avanza portfolio built up over 15 years, a fully paid apartment — never seen together. What would you want to understand first?',
     };
 
     function handleMandate(yes) {

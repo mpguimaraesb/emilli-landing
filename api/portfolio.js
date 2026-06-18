@@ -4,7 +4,7 @@
 
 const PORTFOLIO_DEFS = {
   carl: {
-    personaContext: `Carl, 29, Stockholm. Active stock picker. Uses Nordnet as primary broker (switched from Avanza for deeper research tools). Reads Dagens Industri, listens to Fill or Kill podcast. Self-taught, started during the Reddit/GameStop era. Now focuses on top European companies by market cap. Does 2-5% position sizing per name as a rule. Has an old Avanza account he never integrated into his strategy. Has an ITP pension through his employer that he has never looked at.`,
+    personaContext: `Carl, 29, Stockholm. Active stock picker. Uses Nordnet as primary broker (switched from Avanza for deeper research tools). Reads Dagens Industri, listens to Fill or Kill podcast. Self-taught, started during the Reddit/GameStop era. Now focuses on top European companies by market cap. Does 2-5% position sizing per name as a rule. Has an old Avanza account he never integrated into his strategy. Rents his apartment.`,
     accounts: [
       {
         label: 'Nordnet ISK',
@@ -36,15 +36,10 @@ const PORTFOLIO_DEFS = {
         ],
       },
     ],
-    pension: {
-      label: 'Folksam ITP',
-      valueSEK: 67000,
-      note: 'Employer pension. Default fund allocation. Never reviewed.',
-    },
   },
 
   sara: {
-    personaContext: `Sara, 34, Stockholm. Lawyer at a large firm. Subject to strict compliance rules: must flag every investment with compliance officer, 30-day hold periods before acquiring or disposing of any asset. Result: she avoids trading entirely. Her salary accumulates in a SEB current account tied to her mortgage — she has not moved it because the friction of investing feels too high. Set up an Avanza account in 2021 before the compliance restrictions became more burdensome; has not touched it since. Has an ITP pension through her employer that she has never reviewed.`,
+    personaContext: `Sara, 34, Stockholm. Lawyer at a large firm. Subject to strict compliance rules: must flag every investment with compliance officer, 30-day hold periods before acquiring or disposing of any asset. Result: she avoids trading entirely. Her salary accumulates in a SEB current account tied to her mortgage — she has not moved it because the friction of investing feels too high. Set up an Avanza account in 2021 before the compliance restrictions became more burdensome; has not touched it since. Owns an apartment in Stockholm, estimated value SEK 4,800,000, mortgage of SEK 2,900,000 with SEB (equity ~SEK 1,900,000).`,
     accounts: [
       {
         label: 'Avanza',
@@ -62,15 +57,16 @@ const PORTFOLIO_DEFS = {
       { label: 'SEB Current Account', valueSEK: 520000, note: 'Tied to mortgage. Earns near zero. Primary idle cash.' },
       { label: 'Swedbank Savings',     valueSEK: 78000,  note: 'Savings account, low yield.' },
     ],
-    pension: {
-      label: 'Folksam ITP',
-      valueSEK: 89000,
-      note: 'Employer pension. Never reviewed.',
+    property: {
+      label: 'Apartment, Stockholm',
+      estimatedValueSEK: 4800000,
+      mortgageSEK: 2900000,
+      note: 'Mortgage held with SEB.',
     },
   },
 
   erik: {
-    personaContext: `Erik, 43, Göteborg. Classic Swedish multi-bank tangle. Mortgage with SEB — required moving all day-to-day banking to SEB for preferential rates. Opened Avanza separately for investing; has built positions over 15+ years, one at a time, with no overall strategy review. Has a Nordea account he never closed after switching banks. Has a forgotten Handelsbanken joint account. Owns an apartment in Göteborg. Has never seen his full financial picture in one place.`,
+    personaContext: `Erik, 43, Göteborg. Classic Swedish multi-bank tangle. Day-to-day banking with SEB. Opened Avanza separately for investing; has built positions over 15+ years, one at a time, with no overall strategy review. Has a Nordea account he never closed after switching banks. Has a forgotten Handelsbanken joint account. Owns an apartment in Göteborg — fully paid, estimated value SEK 4,200,000. Has never seen his full financial picture in one place.`,
     accounts: [
       {
         label: 'Avanza',
@@ -83,7 +79,7 @@ const PORTFOLIO_DEFS = {
           { ticker: 'HMB.ST',     name: 'H&M B',                             weight: 0.10, sector: 'Consumer Discretionary', country: 'Sweden',     note: 'Held since early 2010s, down significantly from peak' },
           { ticker: 'ERIC-B.ST',  name: 'Ericsson B',                         weight: 0.08, sector: 'Technology',             country: 'Sweden',     note: 'Bought 2019-2020, has not performed' },
           { ticker: 'INVE-B.ST',  name: 'Investor B',                         weight: 0.08, sector: 'Financials',             country: 'Sweden' },
-          { ticker: 'SEB-A.ST',   name: 'SEB A',                             weight: 0.07, sector: 'Financials',             country: 'Sweden',     note: 'Owns shares in the bank that holds his mortgage' },
+          { ticker: 'SEB-A.ST',   name: 'SEB A',                             weight: 0.07, sector: 'Financials',             country: 'Sweden',     note: 'Owns shares in the same bank where he keeps his savings' },
           { ticker: 'LIFCO-B.ST', name: 'Lifco B',                            weight: 0.10, sector: 'Industrials',            country: 'Sweden' },
           { ticker: 'VWCE.DE',    name: 'Vanguard FTSE All-World UCITS ETF', weight: 0.13, sector: 'Global ETF',             country: 'Global',     note: 'Added more recently' },
         ],
@@ -91,7 +87,7 @@ const PORTFOLIO_DEFS = {
       {
         label: 'SEB Savings',
         valueSEK: 210000,
-        note: 'Cash savings. Tied to SEB relationship because of mortgage.',
+        note: 'Cash savings. Primary banking relationship.',
         positions: [],
       },
       {
@@ -107,16 +103,11 @@ const PORTFOLIO_DEFS = {
         positions: [],
       },
     ],
-    pension: {
-      label: 'AMF Tjänstepension',
-      valueSEK: 680000,
-      note: 'Occupational pension. Never reviewed as part of overall picture.',
-    },
     property: {
       label: 'Apartment, Göteborg',
       estimatedValueSEK: 4200000,
-      mortgageSEK: 2400000,
-      note: 'Mortgage held with SEB.',
+      mortgageSEK: 0,
+      note: 'Fully owned. No outstanding mortgage.',
     },
   },
 };
@@ -238,18 +229,17 @@ function buildPromptText(personaId, def, quotes) {
     lines.push('');
   }
 
-  // ── Pension ──
-  if (def.pension) {
-    lines.push(`PENSION — ${def.pension.label}: SEK ${def.pension.valueSEK.toLocaleString('sv-SE')}`);
-    if (def.pension.note) lines.push(`  ${def.pension.note}`);
-    lines.push('');
-  }
-
-  // ── Property (Erik) ──
+  // ── Property ──
   if (def.property) {
+    const equity = def.property.estimatedValueSEK - def.property.mortgageSEK;
     lines.push(`PROPERTY — ${def.property.label}`);
     lines.push(`  Estimated value: SEK ${def.property.estimatedValueSEK.toLocaleString('sv-SE')}`);
-    lines.push(`  Mortgage outstanding: SEK ${def.property.mortgageSEK.toLocaleString('sv-SE')}`);
+    if (def.property.mortgageSEK > 0) {
+      lines.push(`  Mortgage outstanding: SEK ${def.property.mortgageSEK.toLocaleString('sv-SE')}`);
+      lines.push(`  Net equity: SEK ${equity.toLocaleString('sv-SE')}`);
+    } else {
+      lines.push(`  Fully paid — equity: SEK ${equity.toLocaleString('sv-SE')}`);
+    }
     if (def.property.note) lines.push(`  ${def.property.note}`);
     lines.push('');
   }
@@ -298,7 +288,6 @@ function buildTensions(personaId, def, quotes) {
 
     t.push('Zero direct US equity exposure — global only via SEK 43,000 Avanza index funds alongside SEK 187,000 Nordnet portfolio');
     t.push('Avanza account (SEK 43,000) sits alongside Nordnet with no integrated strategy — two separate approaches that have never been looked at together');
-    t.push('ITP pension (SEK 67,000) in default fund — never reviewed, unknown allocation');
     t.push('Top 3 positions (Atlas Copco, Volvo, Hexagon) = ~37% — above his stated 2-5% per-name rule implies some positions have grown without being trimmed');
   }
 
@@ -319,7 +308,7 @@ function buildTensions(personaId, def, quotes) {
     }
 
     t.push('Avanza account untouched since 2021 — performance relative to idle cash unknown to her');
-    t.push('ITP pension (SEK 89,000) never reviewed');
+    t.push('Apartment in Stockholm: estimated SEK 4,800,000, mortgage SEK 2,900,000 (SEB) — equity ~SEK 1,900,000. The same bank holds her mortgage and her idle cash.');
   }
 
   if (personaId === 'erik') {
@@ -336,10 +325,9 @@ function buildTensions(personaId, def, quotes) {
       t.push(`Ericsson (8% of Avanza) is down ${Math.abs(ericQ.change52w).toFixed(1)}% 52w — bought 2019-2020, held through sustained decline`);
     }
 
-    t.push('SEB A (7% of Avanza) — Erik owns shares in the same bank that holds his mortgage and manages his savings');
-    t.push('AMF pension (SEK 680,000 — largest single financial asset) never integrated into overall investment picture');
+    t.push('SEB A (7% of Avanza) — Erik owns shares in the same bank that holds his savings');
     t.push('Nordea account (SEK 44,000) and Handelsbanken account (SEK 12,000) are forgotten but real');
-    t.push('Property equity (est. SEK 1,800,000 net of mortgage) never discussed in context of investment allocation');
+    t.push('Göteborg apartment fully paid — estimated SEK 4,200,000 in real estate equity never discussed in context of investment allocation');
   }
 
   return t;
