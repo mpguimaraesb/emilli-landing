@@ -785,6 +785,7 @@
       max-width: 72px;
     }
     .typing-indicator.show { display: flex; }
+    .typing-indicator.user-side { align-self: flex-end; }
     .typing-dot {
       width: 6px;
       height: 6px;
@@ -1146,16 +1147,19 @@
             </div>
           </div>
           <div class="mandate-card" id="mandate-card">
-            <p class="mandate-text">Most people I talk to reach a point where they'd rather not make these calls themselves.<br><br>Is that where you are?</p>
+            <p class="mandate-text" id="mandate-text">Most people I talk to reach a point where they'd rather not make these calls themselves.<br><br>Is that where you are?</p>
             <div class="mandate-actions" id="mandate-actions">
-              <button class="mandate-btn yes" onclick="handleMandate(true)">That's me</button>
+              <button class="mandate-btn yes" onclick="handleMandate(true)">Yes, that's me</button>
               <button class="mandate-btn no" onclick="handleMandate(false)">Not yet</button>
             </div>
+            <!-- Yes path -->
             <div class="mandate-form" id="mandate-form">
+              <p style="font-size:13px;font-weight:300;color:var(--muted);line-height:1.6;margin-bottom:4px;">A regulated wealth manager can build a mandate around your picture — one you approve, they execute. Leave your details and they'll reach out with a proposal. No commitment until you decide.</p>
+              <input type="text" id="mandate-name" placeholder="Your name" autocomplete="name">
               <input type="email" id="mandate-email" placeholder="your@email.com" autocomplete="email">
-              <button class="mandate-submit" onclick="submitMandate()">Notify me when it opens</button>
+              <button class="mandate-submit" onclick="submitMandate()">Request a proposal</button>
             </div>
-            <p class="mandate-thanks" id="mandate-thanks">We'll reach out when active mandates open. Until then — ask me anything about your picture.</p>
+            <p class="mandate-thanks" id="mandate-thanks">Someone will be in touch with a proposal tailored to your picture. Keep exploring in the meantime.</p>
           </div>
           <p class="disclaimer">Demo data only. Nothing here constitutes financial advice.</p>
           <div class="chat-input-area">
@@ -1385,23 +1389,28 @@
       }
 
       async function play() {
-        await delay(1000);
+        await delay(800);
 
         for (let i = 0; i < steps.length; i++) {
           if (cancelled) return;
           const step = steps[i];
           const isEmilli = step.role === 'emilli';
 
-          // Typing indicator — anchor stays at bottom
+          // Typing indicator — right side for user, left for emilli
+          if (isEmilli) {
+            typing.classList.remove('user-side');
+          } else {
+            typing.classList.add('user-side');
+          }
           typing.classList.add('show');
-          typing.style.alignSelf = 'flex-start';
           container.scrollTop = container.scrollHeight;
 
-          const typingMs = Math.max(1600, step.text.length * 38);
+          const typingMs = Math.max(900, step.text.length * 18);
           await delay(typingMs);
           if (cancelled) return;
 
           typing.classList.remove('show');
+          typing.classList.remove('user-side');
 
           const div = document.createElement('div');
           div.className = `msg ${isEmilli ? 'emilli' : 'user'}`;
@@ -1411,14 +1420,12 @@
           container.insertBefore(div, typing);
           container.scrollTop = container.scrollHeight;
 
-          // Pause after message before next
-          const pauseMs = isEmilli ? 2800 : 2000;
+          const pauseMs = isEmilli ? 1400 : 1000;
           await delay(pauseMs);
           if (cancelled) return;
         }
 
-        // Brief pause then hand off
-        await delay(1200);
+        await delay(800);
         if (!cancelled) onComplete();
       }
 
@@ -1547,7 +1554,7 @@
 
       setTimeout(() => {
         document.getElementById('emilli-entry').classList.add('show');
-      }, 900);
+      }, 3500);
     }
 
     function accountRow(a) {
@@ -1714,17 +1721,35 @@
 
     // ─── MANDATE ──────────────────────────────────────────────
 
+    const MANDATE_NO_FOLLOWUP = {
+      carl: 'Understood. Then let\'s look at what this picture is actually telling you. Your Nordnet and Avanza accounts have never been reviewed together — that\'s where I\'d start. What does your biggest position mean to you right now?',
+      sara: 'Understood. Then let\'s work with what you have. The cash sitting idle is the clearest lever in your picture. What\'s stopped you from moving it so far?',
+      erik: 'Understood. Then let\'s look at what this picture is showing you. Three banks, a pension, a property — built up over years with no single review. What would you want to understand first?',
+    };
+
     function handleMandate(yes) {
       document.getElementById('mandate-actions').style.display = 'none';
+      document.getElementById('mandate-text').style.display = 'none';
+
       if (yes) {
         document.getElementById('mandate-form').classList.add('show');
-        document.getElementById('mandate-email').focus();
+        document.getElementById('mandate-name').focus();
       } else {
+        // Dismiss card, emilli sends a strategy-mode follow-up
         document.getElementById('mandate-card').classList.remove('show');
+        const followUp = MANDATE_NO_FOLLOWUP[state.persona];
+        if (followUp) {
+          setTimeout(() => {
+            appendMessage('emilli', followUp);
+            state.messages.push({ role: 'assistant', content: followUp });
+            document.getElementById('chat-messages').scrollTop = 999999;
+          }, 600);
+        }
       }
     }
 
     async function submitMandate() {
+      const name  = document.getElementById('mandate-name').value.trim();
       const email = document.getElementById('mandate-email').value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         document.getElementById('mandate-email').focus();
@@ -1734,7 +1759,7 @@
         await fetch('/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source: 'demo-mandate' }),
+          body: JSON.stringify({ email, name, source: 'demo-mandate' }),
         });
       } catch {}
       document.getElementById('mandate-form').classList.remove('show');
