@@ -116,38 +116,58 @@ const PORTFOLIO_DEFS = {
 
 async function fetchYahooQuotes(tickers) {
   if (!tickers.length) return {};
-  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${tickers.join(',')}&lang=en-US&region=US`;
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      signal: AbortSignal.timeout(6000),
-    });
-    if (!res.ok) return {};
-    const data = await res.json();
-    const map = {};
-    for (const q of (data?.quoteResponse?.result ?? [])) {
-      // fiftyTwoWeekChangePercent comes back as a fraction (0.34 = 34%)
-      const raw52w = q.fiftyTwoWeekChangePercent;
-      const change52w = raw52w != null
-        ? (Math.abs(raw52w) < 5 ? raw52w * 100 : raw52w)
-        : null;
-      map[q.symbol] = {
-        price:      q.regularMarketPrice ?? null,
-        currency:   q.currency ?? 'SEK',
-        change1d:   q.regularMarketChangePercent ?? null,
-        change52w,
-        pe:         q.trailingPE ?? q.forwardPE ?? null,
-        marketCap:  q.marketCap ?? null,
-      };
+  const symbolStr = tickers.join(',');
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://finance.yahoo.com',
+  };
+
+  // Try query1, fall back to query2 if blocked (common on cloud IPs)
+  const endpoints = [
+    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolStr}&lang=en-US&region=US`,
+    `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${symbolStr}&lang=en-US&region=US`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(7000) });
+      if (!res.ok) {
+        console.warn(`Yahoo Finance ${url.includes('query1') ? 'query1' : 'query2'} returned ${res.status}`);
+        continue;
+      }
+      const data = await res.json();
+      const results = data?.quoteResponse?.result ?? [];
+      if (!results.length) {
+        console.warn('Yahoo Finance returned empty result set');
+        continue;
+      }
+      const map = {};
+      for (const q of results) {
+        // fiftyTwoWeekChangePercent is a fraction on some responses (0.34 = 34%), integer on others
+        const raw52w = q.fiftyTwoWeekChangePercent;
+        const change52w = raw52w != null
+          ? (Math.abs(raw52w) < 5 ? raw52w * 100 : raw52w)
+          : null;
+        map[q.symbol] = {
+          price:      q.regularMarketPrice ?? null,
+          currency:   q.currency ?? 'SEK',
+          change1d:   q.regularMarketChangePercent ?? null,
+          change52w,
+          pe:         q.trailingPE ?? q.forwardPE ?? null,
+          marketCap:  q.marketCap ?? null,
+        };
+      }
+      console.log(`Yahoo Finance OK via ${url.includes('query1') ? 'query1' : 'query2'}: ${Object.keys(map).length} quotes`);
+      return map;
+    } catch (err) {
+      console.warn(`Yahoo Finance fetch failed (${url.includes('query1') ? 'query1' : 'query2'}):`, err.message);
     }
-    return map;
-  } catch {
-    return {};
   }
+
+  console.error('Yahoo Finance unavailable on both endpoints — falling back to static data');
+  return {};
 }
 
 // ─── SUMMARY BUILDER ─────────────────────────────────────────
@@ -166,7 +186,10 @@ function buildPromptText(personaId, def, quotes) {
   const lines = [];
   const liveData = Object.keys(quotes).length > 0;
 
-  lines.push('═══ PORTFOLIO DATA' + (liveData ? ' (live prices)' : ' (static — live fetch unavailable)') + ' ═══');
+  lines.push('═══ PORTFOLIO DATA' + (liveData ? ' (live prices — 52w performance data available)' : ' (static — live prices unavailable, 52w data shows as n/a)') + ' ═══');
+  if (!liveData) {
+    lines.push('NOTE: Live market data could not be fetched. 52w performance figures are unavailable. Do not claim to know performance numbers — reference position notes and structural observations only.');
+  }
   lines.push('');
   lines.push('PERSONA CONTEXT:');
   lines.push(def.personaContext);

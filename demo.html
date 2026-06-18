@@ -1653,6 +1653,20 @@
       el.style.height = Math.min(el.scrollHeight, 100) + 'px';
     }
 
+    function mandateSignalDetected(text) {
+      const t = text.toLowerCase();
+      return [
+        'help me', 'need help', 'can you help', 'i need',
+        "don't know", "i don't know", 'not sure', 'unsure', 'confused',
+        'what should i', 'what do i do', 'where do i start',
+        'overwhelmed', 'too complex', 'too complicated', 'too much',
+        'advisor', 'professional', 'someone to help', 'manage this',
+        "can't manage", "don't have time", 'no time',
+        'tell me what', 'guide me', 'help push', 'need someone',
+        "i'm lost", 'lost here', "don't understand",
+      ].some(signal => t.includes(signal));
+    }
+
     async function sendMessage() {
       const input = document.getElementById('chat-input');
       const btn = document.getElementById('send-btn');
@@ -1675,7 +1689,10 @@
         return;
       }
 
-      const shouldTriggerMandate = state.userTurns === 4 && !state.mandateShown;
+      const shouldTriggerMandate = !state.mandateShown && (
+        (state.userTurns >= 8) ||
+        (state.userTurns >= 2 && mandateSignalDetected(text))
+      );
 
       document.getElementById('typing').classList.add('show');
       document.getElementById('chat-messages').scrollTop = 999999;
