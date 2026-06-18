@@ -26,6 +26,11 @@ ${portfolioPromptText}${mandateInstruction}`;
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('ANTHROPIC_API_KEY is not set');
+    return res.status(500).json({ error: 'Server misconfiguration: missing API key' });
+  }
+
   const { personaId, messages, portfolioPromptText, triggerMandate } = req.body ?? {};
 
   if (!personaId || !VALID_PERSONAS.includes(personaId)) {
@@ -67,7 +72,7 @@ module.exports = async function handler(req, res) {
   if (!response.ok) {
     const body = await response.text();
     console.error('Anthropic error:', response.status, body);
-    return res.status(500).json({ error: 'AI error' });
+    return res.status(500).json({ error: `Anthropic ${response.status}: ${body.slice(0, 200)}` });
   }
 
   const data = await response.json();
