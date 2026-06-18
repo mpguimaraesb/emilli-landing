@@ -1271,24 +1271,24 @@
         ],
       }),
       sara: (idleCash) => {
-        const loss = Math.round((idleCash * 0.029) / 1000) * 1000;
-        const cashStr = idleCash.toLocaleString('sv-SE');
-        const lossStr = loss.toLocaleString('sv-SE');
-        const total = idleCash + 78000 + 31000;
+        const totalCash = idleCash + 78000;
+        const sebStr = idleCash.toLocaleString('sv-SE');
+        const totalCashStr = totalCash.toLocaleString('sv-SE');
+        const total = totalCash + 31000;
         return {
           name: 'Sara',
           greeting: 'Good morning,',
           total: 'SEK ' + total.toLocaleString('sv-SE'),
           totalSub: 'Cash + investments · Property SEK 4,800,000',
           accounts: [
-            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Current account · Tied to mortgage', amount: cashStr, currency: 'SEK' },
+            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Current account · Tied to mortgage', amount: sebStr, currency: 'SEK' },
             { icon: 'SW', color: '#e8000d', name: 'Swedbank', sub: 'Savings account', amount: '78,000', currency: 'SEK' },
             { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: 'Index funds · Untouched since 2021', amount: '31,000', currency: 'SEK' },
           ],
           property: [
             { icon: 'H', color: '#5c3d1e', name: 'Apartment, Stockholm', sub: 'Mortgage SEK 2,900,000 · Equity SEK 1,900,000', amount: '4,800,000', currency: 'SEK' },
           ],
-          opener: `You have SEK ${cashStr} in a current account. At current inflation that's losing roughly SEK ${lossStr} in real value each year. Is that a deliberate choice?`,
+          opener: `You have SEK ${totalCashStr} sitting across two cash accounts earning near zero. Is that a deliberate choice?`,
           connections: [
             { icon: 'S', color: '#003087', name: 'SEB', type: 'Current + mortgage' },
             { icon: 'SW', color: '#e8000d', name: 'Swedbank', type: 'Savings account' },
@@ -1448,7 +1448,7 @@
         const res = await fetch('/api/portfolio', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ personaId: state.persona }),
+          body: JSON.stringify({ personaId: state.persona, tweakValue: getTweakValue() }),
         });
         const portfolio = await res.json();
         state.portfolioPromptText = portfolio.promptText ?? null;

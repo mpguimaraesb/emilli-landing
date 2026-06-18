@@ -315,9 +315,10 @@ function buildTensions(personaId, def, quotes) {
   }
 
   if (personaId === 'sara') {
-    const idleCash = def.cashAccounts.reduce((s, c) => s + c.valueSEK, 0);
-    const annualLoss = Math.round((idleCash * 0.029) / 1000) * 1000;
-    t.push(`SEK ${idleCash.toLocaleString('sv-SE')} sitting in current/savings accounts — losing approx SEK ${annualLoss.toLocaleString('sv-SE')} in real value per year at current inflation`);
+    const sebCash = def.cashAccounts[0].valueSEK;
+    const swedbankCash = def.cashAccounts[1].valueSEK;
+    const totalCash = sebCash + swedbankCash;
+    t.push(`Total cash across accounts: SEK ${totalCash.toLocaleString('sv-SE')} (SEB current account SEK ${sebCash.toLocaleString('sv-SE')} + Swedbank savings SEK ${swedbankCash.toLocaleString('sv-SE')}) — both earning near zero while Swedish inflation runs above 2%`);
     t.push('Compliance constraints (30-day hold periods) make self-directed investing impractical — discretionary management would bypass this entirely');
 
     const novoQ = quotes['NOVO-B.CO'];
@@ -361,9 +362,21 @@ function buildTensions(personaId, def, quotes) {
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { personaId } = req.body ?? {};
-  const def = PORTFOLIO_DEFS[personaId];
-  if (!def) return res.status(400).json({ error: 'Invalid persona' });
+  const { personaId, tweakValue } = req.body ?? {};
+  const baseDef = PORTFOLIO_DEFS[personaId];
+  if (!baseDef) return res.status(400).json({ error: 'Invalid persona' });
+
+  // Apply Sara's slider (SEB cash amount) without mutating the shared module-level object
+  let def = baseDef;
+  if (personaId === 'sara' && typeof tweakValue === 'number' && tweakValue > 0) {
+    def = {
+      ...baseDef,
+      cashAccounts: [
+        { ...baseDef.cashAccounts[0], valueSEK: tweakValue },
+        ...baseDef.cashAccounts.slice(1),
+      ],
+    };
+  }
 
   // Collect all fetchable tickers across all accounts
   const tickers = [];
