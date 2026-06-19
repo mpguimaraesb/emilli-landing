@@ -66,22 +66,20 @@ const PORTFOLIO_DEFS = {
   },
 
   erik: {
-    personaContext: `Erik, 43, Göteborg. Classic Swedish multi-bank tangle. Day-to-day banking with SEB. Opened Avanza separately for investing; has built positions over 15+ years, one at a time, with no overall strategy review. Has a Nordea account he never closed after switching banks. Has a forgotten Handelsbanken joint account. Owns an apartment in Göteborg — fully paid, estimated value SEK 4,200,000. Has never seen his full financial picture in one place.`,
+    personaContext: `Erik, 43, Göteborg. Engineering manager at a mid-size tech company. Has been investing deliberately for 15+ years — not passively. Built a globally diversified core through VWCE, then added individual positions around it. Understands diversification, reads about markets, tracks his portfolio in a monthly spreadsheet. The spreadsheet works but takes time and almost certainly misses the aggregate picture — particularly how much technology exposure he actually carries across positions. Banking with SEB (day-to-day). Has a Nordea account he never closed after switching banks. Has a forgotten Handelsbanken joint account. Owns his Göteborg apartment outright. Has never seen all of this consolidated in one place.`,
     accounts: [
       {
         label: 'Avanza',
         valueSEK: 340000,
-        note: 'Built up over 15+ years. Mix of long-term holds and accumulated positions.',
+        note: 'Deliberately constructed. Global core via VWCE with individual positions around it.',
         positions: [
-          { ticker: 'ATCO-B.ST',  name: 'Atlas Copco B',                      weight: 0.18, sector: 'Industrials',            country: 'Sweden',     note: 'Long-term core hold' },
-          { ticker: 'VOLV-B.ST',  name: 'Volvo B',                            weight: 0.14, sector: 'Industrials',            country: 'Sweden' },
-          { ticker: 'NOVO-B.CO',  name: 'Novo Nordisk B',                     weight: 0.12, sector: 'Healthcare',             country: 'Denmark' },
-          { ticker: 'HMB.ST',     name: 'H&M B',                             weight: 0.10, sector: 'Consumer Discretionary', country: 'Sweden',     note: 'Held since early 2010s, down significantly from peak' },
-          { ticker: 'ERIC-B.ST',  name: 'Ericsson B',                         weight: 0.08, sector: 'Technology',             country: 'Sweden',     note: 'Bought 2019-2020, has not performed' },
-          { ticker: 'INVE-B.ST',  name: 'Investor B',                         weight: 0.08, sector: 'Financials',             country: 'Sweden' },
-          { ticker: 'SEB-A.ST',   name: 'SEB A',                             weight: 0.07, sector: 'Financials',             country: 'Sweden',     note: 'Owns shares in the same bank where he keeps his savings' },
-          { ticker: 'LIFCO-B.ST', name: 'Lifco B',                            weight: 0.10, sector: 'Industrials',            country: 'Sweden' },
-          { ticker: 'VWCE.DE',    name: 'Vanguard FTSE All-World UCITS ETF', weight: 0.13, sector: 'Global ETF',             country: 'Global',     note: 'Added more recently' },
+          { ticker: 'VWCE.DE',  name: 'Vanguard FTSE All-World UCITS ETF', weight: 0.40, sector: 'Global ETF',    country: 'Global',  note: 'Deliberate core — global market exposure' },
+          { ticker: 'NVDA',     name: 'Nvidia',                             weight: 0.20, sector: 'Technology',   country: 'USA',     note: 'Large single-name position, up significantly from cost basis' },
+          { ticker: 'EQQQ.L',   name: 'Invesco Nasdaq-100 UCITS ETF',      weight: 0.10, sector: 'Technology',   country: 'Global',  note: 'Tech ETF added alongside VWCE — creates tech overlap' },
+          { ticker: 'ATCO-B.ST', name: 'Atlas Copco B',                    weight: 0.10, sector: 'Industrials',  country: 'Sweden',  note: 'Swedish quality holding' },
+          { ticker: 'NOVO-B.CO', name: 'Novo Nordisk B',                   weight: 0.08, sector: 'Healthcare',   country: 'Denmark' },
+          { ticker: 'INVE-B.ST', name: 'Investor B',                       weight: 0.07, sector: 'Financials',   country: 'Sweden' },
+          { ticker: 'SEB-A.ST',  name: 'SEB A',                            weight: 0.05, sector: 'Financials',   country: 'Sweden',  note: 'Owns shares in the same bank holding his savings account' },
         ],
       },
       {
@@ -336,22 +334,24 @@ function buildTensions(personaId, def, quotes) {
   }
 
   if (personaId === 'erik') {
-    t.push(`Full financial picture fragmented across 4 institutions — no consolidated view has ever existed`);
-    t.push('Avanza portfolio (SEK 340,000) built position by position over 15+ years with no overall strategy review');
+    // Aggregate tech exposure calculation
+    // VWCE tracks FTSE All-World — technology sector ~22% of index
+    const vwceTechPct = 0.40 * 0.22 * 100; // ~8.8%
+    const nvdaPct = 20;
+    const eqqqPct = 10;
+    const totalTechPct = vwceTechPct + nvdaPct + eqqqPct;
+    t.push(`Aggregate technology exposure is ~${totalTechPct.toFixed(0)}% — Nvidia (20%) + Nasdaq-100 ETF (10%) + ~${vwceTechPct.toFixed(0)}% tech weighting inside VWCE. Individual position sizes do not reveal this; it only appears in the consolidated picture.`);
 
-    const hmbQ = quotes['HMB.ST'];
-    if (hmbQ?.change52w != null && hmbQ.change52w < -5) {
-      t.push(`H&M (10% of Avanza) is down ${Math.abs(hmbQ.change52w).toFixed(1)}% 52w — long-term hold that has underperformed`);
+    const nvdaQ = quotes['NVDA'];
+    if (nvdaQ?.change52w != null) {
+      const dir = nvdaQ.change52w >= 0 ? `up ${nvdaQ.change52w.toFixed(1)}%` : `down ${Math.abs(nvdaQ.change52w).toFixed(1)}%`;
+      t.push(`Nvidia is ${dir} over 52 weeks — at 20% of the portfolio, performance of this single name has an outsized effect on total returns`);
     }
 
-    const ericQ = quotes['ERIC-B.ST'];
-    if (ericQ?.change52w != null && ericQ.change52w < -10) {
-      t.push(`Ericsson (8% of Avanza) is down ${Math.abs(ericQ.change52w).toFixed(1)}% 52w — bought 2019-2020, held through sustained decline`);
-    }
-
-    t.push('SEB A (7% of Avanza) — Erik owns shares in the same bank that holds his savings');
-    t.push('Nordea account (SEK 44,000) and Handelsbanken account (SEK 12,000) are forgotten but real');
-    t.push('Göteborg apartment fully paid — estimated SEK 4,200,000 in real estate equity never discussed in context of investment allocation');
+    t.push('SEB A (5% of Avanza) — Erik owns shares in the same bank holding his savings account');
+    t.push('Financial picture is fragmented across 3–4 institutions. The spreadsheet he uses to track it almost certainly does not capture aggregate sector exposure across ETFs and individual positions.');
+    t.push('Göteborg apartment fully paid — estimated SEK 4,200,000 in real estate equity never discussed in context of overall allocation');
+    t.push('Nordea account (SEK 44,000) and Handelsbanken account (SEK 12,000) are real assets sitting outside the investment picture');
   }
 
   return t;
