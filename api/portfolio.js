@@ -66,19 +66,20 @@ const PORTFOLIO_DEFS = {
   },
 
   erik: {
-    personaContext: `Erik, 43, Göteborg. Engineering manager at a mid-size tech company. Has been investing deliberately for 15+ years — not passively. Built a globally diversified core through VWCE, then added individual positions around it. Understands diversification, reads about markets, tracks his portfolio in a monthly spreadsheet. The spreadsheet works but takes time and almost certainly misses the aggregate picture — particularly how much technology exposure he actually carries across positions. Banking with SEB (day-to-day). Has a Nordea account he never closed after switching banks. Has a forgotten Handelsbanken joint account. Owns his Göteborg apartment outright. Has never seen all of this consolidated in one place.`,
+    personaContext: `Erik, 43, Göteborg. Engineering manager at a mid-size tech company. Has been investing deliberately for 15+ years — not passively. Built a globally diversified core through VWCE, then added individual positions around it. Understands diversification, reads financial analysis, tracks his portfolio in a monthly spreadsheet. Comfortable with concepts like index composition, factor exposure, correlation, and sector weighting. Will ask technical questions and expect substantive answers. The spreadsheet works but misses the aggregate picture — specifically, how much Nvidia exposure he carries across multiple vehicles simultaneously: directly, via the Nasdaq-100 ETF, and via VWCE. Banking with SEB (day-to-day). Has a Nordea account he never closed after switching banks. Has a forgotten Handelsbanken joint account. Owns his Göteborg apartment outright. Has never seen all of this consolidated in one place.`,
     accounts: [
       {
         label: 'Avanza',
         valueSEK: 340000,
         note: 'Deliberately constructed. Global core via VWCE with individual positions around it.',
         positions: [
-          { ticker: 'VWCE.DE',  name: 'Vanguard FTSE All-World UCITS ETF', weight: 0.40, sector: 'Global ETF',    country: 'Global',  note: 'Deliberate core — global market exposure' },
-          { ticker: 'NVDA',     name: 'Nvidia',                             weight: 0.20, sector: 'Technology',   country: 'USA',     note: 'Large single-name position, up significantly from cost basis' },
-          { ticker: 'EQQQ.L',   name: 'Invesco Nasdaq-100 UCITS ETF',      weight: 0.10, sector: 'Technology',   country: 'Global',  note: 'Tech ETF added alongside VWCE — creates tech overlap' },
+          { ticker: 'VWCE.DE',  name: 'Vanguard FTSE All-World UCITS ETF', weight: 0.40, sector: 'Global ETF',    country: 'Global',  note: 'Deliberate core — global market exposure. NVDA ~3.5% of FTSE All-World index.' },
+          { ticker: 'NVDA',     name: 'Nvidia',                             weight: 0.15, sector: 'Technology',   country: 'USA',     note: 'Direct position. Also held indirectly via EQQQ (~8% of Nasdaq-100) and VWCE (~3.5% of index).' },
+          { ticker: 'EQQQ.L',   name: 'Invesco Nasdaq-100 UCITS ETF',      weight: 0.10, sector: 'Technology',   country: 'Global',  note: 'Nasdaq-100 ETF. NVDA is largest or second-largest constituent at ~8% of index weight.' },
           { ticker: 'ATCO-B.ST', name: 'Atlas Copco B',                    weight: 0.10, sector: 'Industrials',  country: 'Sweden',  note: 'Swedish quality holding' },
           { ticker: 'NOVO-B.CO', name: 'Novo Nordisk B',                   weight: 0.08, sector: 'Healthcare',   country: 'Denmark' },
           { ticker: 'INVE-B.ST', name: 'Investor B',                       weight: 0.07, sector: 'Financials',   country: 'Sweden' },
+          { ticker: 'ASML.AS',   name: 'ASML',                             weight: 0.05, sector: 'Technology',   country: 'Netherlands', note: 'Semiconductor equipment monopoly. Highly correlated with Nvidia cycle — same AI capex wave.' },
           { ticker: 'SEB-A.ST',  name: 'SEB A',                            weight: 0.05, sector: 'Financials',   country: 'Sweden',  note: 'Owns shares in the same bank holding his savings account' },
         ],
       },
@@ -334,24 +335,37 @@ function buildTensions(personaId, def, quotes) {
   }
 
   if (personaId === 'erik') {
-    // Aggregate tech exposure calculation
-    // VWCE tracks FTSE All-World — technology sector ~22% of index
-    const vwceTechPct = 0.40 * 0.22 * 100; // ~8.8%
-    const nvdaPct = 20;
-    const eqqqPct = 10;
-    const totalTechPct = vwceTechPct + nvdaPct + eqqqPct;
-    t.push(`Aggregate technology exposure is ~${totalTechPct.toFixed(0)}% — Nvidia (20%) + Nasdaq-100 ETF (10%) + ~${vwceTechPct.toFixed(0)}% tech weighting inside VWCE. Individual position sizes do not reveal this; it only appears in the consolidated picture.`);
+    // NVDA triple-exposure calculation
+    // Direct: 15% of Avanza
+    // Via EQQQ (Nasdaq-100): NVDA is ~8% of Nasdaq-100 index. EQQQ = 10% of portfolio → 0.10 * 0.08 = 0.8%
+    // Via VWCE (FTSE All-World): NVDA is ~3.5% of FTSE All-World. VWCE = 40% of portfolio → 0.40 * 0.035 = 1.4%
+    const nvdaDirect = 15;
+    const nvdaViaEqqq = 0.10 * 0.08 * 100; // ~0.8%
+    const nvdaViaVwce = 0.40 * 0.035 * 100; // ~1.4%
+    const nvdaTotal = nvdaDirect + nvdaViaEqqq + nvdaViaVwce; // ~17.2%
+
+    // Tech sector total
+    const vwceTech = 0.40 * 0.22 * 100; // ~8.8%
+    const techTotal = 15 + 10 + vwceTech + 5; // NVDA + EQQQ + VWCE tech + ASML
+
+    t.push(`Nvidia triple-exposure: ${nvdaDirect}% direct + ~${nvdaViaEqqq.toFixed(1)}% via Nasdaq-100 ETF (NVDA ~8% of index) + ~${nvdaViaVwce.toFixed(1)}% via VWCE (NVDA ~3.5% of FTSE All-World) = ~${nvdaTotal.toFixed(0)}% effective NVDA exposure. The spreadsheet shows ${nvdaDirect}%. The consolidated picture shows ${nvdaTotal.toFixed(0)}%.`);
+    t.push(`ASML (5%) is semiconductor equipment — the pick-and-shovel play on AI capex. Highly correlated with Nvidia: when AI infrastructure spend slows, both are hit simultaneously. This adds to the semiconductor cycle concentration, not away from it.`);
+    t.push(`Total technology sector exposure: NVDA direct (15%) + Nasdaq-100 ETF (10%) + ~${vwceTech.toFixed(0)}% tech inside VWCE + ASML (5%) = ~${techTotal.toFixed(0)}%. Erik thinks of himself as globally diversified. He is — except in technology.`);
 
     const nvdaQ = quotes['NVDA'];
     if (nvdaQ?.change52w != null) {
       const dir = nvdaQ.change52w >= 0 ? `up ${nvdaQ.change52w.toFixed(1)}%` : `down ${Math.abs(nvdaQ.change52w).toFixed(1)}%`;
-      t.push(`Nvidia is ${dir} over 52 weeks — at 20% of the portfolio, performance of this single name has an outsized effect on total returns`);
+      t.push(`Nvidia is ${dir} over 52 weeks — at ~${nvdaTotal.toFixed(0)}% effective portfolio exposure, this single name's movement drives a significant portion of total returns`);
     }
 
-    t.push('SEB A (5% of Avanza) — Erik owns shares in the same bank holding his savings account');
-    t.push('Financial picture is fragmented across 3–4 institutions. The spreadsheet he uses to track it almost certainly does not capture aggregate sector exposure across ETFs and individual positions.');
-    t.push('Göteborg apartment fully paid — estimated SEK 4,200,000 in real estate equity never discussed in context of overall allocation');
-    t.push('Nordea account (SEK 44,000) and Handelsbanken account (SEK 12,000) are real assets sitting outside the investment picture');
+    const asmlQ = quotes['ASML.AS'];
+    if (asmlQ?.change52w != null) {
+      t.push(`ASML is ${asmlQ.change52w >= 0 ? '+' : ''}${asmlQ.change52w.toFixed(1)}% over 52 weeks — correlated with the same AI capex cycle as Nvidia`);
+    }
+
+    t.push('SEB A (5% of Avanza) — owns shares in the same bank holding his savings account');
+    t.push('Financial picture fragmented across 3–4 institutions. The monthly spreadsheet does not capture effective single-name exposure across overlapping ETF holdings.');
+    t.push('Göteborg apartment fully paid — SEK 4,200,000 in real estate equity never discussed in context of overall allocation');
   }
 
   return t;
