@@ -384,10 +384,10 @@ function buildTensions(personaId, def, computedAccounts) {
     const eqqq  = positions.find(p => p.sym === 'EQQQ:LSE');
     const asml  = positions.find(p => p.sym === 'ASML:Euronext');
 
-    const nvdaWt  = nvda?.weight  ?? 0.33;
-    const vwceWt  = vwce?.weight  ?? 0.39;
-    const eqqqWt  = eqqq?.weight  ?? 0.10;
-    const asmlWt  = asml?.weight  ?? 0.08;
+    const nvdaWt  = nvda?.weight  ?? 0.25;
+    const vwceWt  = vwce?.weight  ?? 0.44;
+    const eqqqWt  = eqqq?.weight  ?? 0.11;
+    const asmlWt  = asml?.weight  ?? 0.09;
 
     const nvdaViaEqqq = eqqqWt * 0.08;
     const nvdaViaVwce = vwceWt * 0.035;
