@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1081,6 +1082,71 @@
         height: 780px;
       }
     }
+
+    /* ─── CHART SECTION ─────────────────────────────────────── */
+
+    .chart-section { margin: 0 0 0; }
+    .chart-tabs { display: flex; gap: 6px; }
+    .chart-tab {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+      padding: 5px 11px; border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      cursor: pointer; font-family: var(--font);
+      transition: all 0.15s;
+    }
+    .chart-tab.active {
+      background: var(--amber-soft);
+      border-color: rgba(212,105,58,0.35);
+      color: var(--amber);
+    }
+    .chart-period-gain { font-size: 12px; font-weight: 500; }
+    .chart-period-gain.gain-pos { color: #6dc88a; }
+    .chart-period-gain.gain-neg { color: #e07070; }
+    .chart-wrap { position: relative; height: 108px; margin-top: 10px; }
+
+    /* ─── DONUT SECTION ─────────────────────────────────────── */
+
+    .donut-section { display: flex; gap: 16px; align-items: center; }
+    .donut-canvas-wrap { width: 84px; height: 84px; flex-shrink: 0; }
+    .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+    .donut-item { display: flex; align-items: center; gap: 8px; }
+    .donut-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .donut-label { font-size: 11px; font-weight: 300; color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .donut-pct { font-size: 11px; font-weight: 500; color: var(--text); }
+
+    /* ─── ACCOUNT WRAP + EXPANDABLE POSITIONS ─────────────── */
+
+    .account-wrap { margin-bottom: 8px; }
+    .account-wrap .account-row { margin-bottom: 0; }
+    .account-row.expandable { cursor: pointer; }
+    .account-row.expanded { border-radius: 14px 14px 0 0; }
+    .ac-chevron { font-size: 10px; color: var(--dim); display: inline-block; transition: transform 0.2s; margin-left: 2px; }
+    .account-row.expanded .ac-chevron { transform: rotate(180deg); }
+    .positions-wrap {
+      display: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+    }
+    .positions-wrap.open { display: block; }
+    .position-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 9px 14px; border-bottom: 1px solid var(--border);
+    }
+    .position-row:last-child { border-bottom: none; }
+    .pos-left { flex: 1; min-width: 0; padding-right: 8px; }
+    .pos-name { font-size: 12px; font-weight: 400; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pos-weight { font-size: 10px; color: var(--dim); margin-top: 1px; }
+    .pos-right { text-align: right; flex-shrink: 0; }
+    .pos-value { font-size: 12px; font-weight: 500; color: var(--text); }
+    .pos-gl { font-size: 10px; margin-top: 1px; }
+    .pos-gl.gain { color: #6dc88a; }
+    .pos-gl.loss { color: #e07070; }
+
+    .summary-sub-total { margin-bottom: 16px; }
   </style>
 </head>
 <body>
@@ -1638,19 +1704,158 @@
       return Math.round(n).toLocaleString('sv-SE');
     }
 
+    // ─── CHARTS ───────────────────────────────────────────────
+
+    const HISTORY_ANCHORS = {
+      carl: [[72,0.28],[60,0.44],[48,0.70],[36,0.58],[30,0.62],[24,0.72],[12,0.88],[0,1.00]],
+      erik: [[84,0.14],[60,0.38],[42,0.50],[36,0.37],[24,0.47],[18,0.54],[12,0.63],[6,0.82],[0,1.00]],
+      sara: [[60,0.12],[48,0.38],[36,0.60],[24,0.78],[12,0.91],[0,1.00]],
+    };
+
+    let lineChartInstance = null;
+    let donutChartInstance = null;
+
+    function interpolateFraction(anchors, m) {
+      for (let i = 0; i < anchors.length - 1; i++) {
+        const [m0, f0] = anchors[i], [m1, f1] = anchors[i + 1];
+        if (m <= m0 && m >= m1) return f0 + (m0 - m) / (m0 - m1) * (f1 - f0);
+      }
+      return anchors[anchors.length - 1][1];
+    }
+
+    function generateChartData(persona, totalSEK, years) {
+      const anchors = HISTORY_ANCHORS[persona] ?? HISTORY_ANCHORS.carl;
+      const maxM = years * 12;
+      const pts = [];
+      for (let i = 0; i <= 52; i++) {
+        pts.push(Math.round(totalSEK * interpolateFraction(anchors, maxM * (1 - i / 52))));
+      }
+      return pts;
+    }
+
+    function initLineChart(persona, totalSEK, years) {
+      if (lineChartInstance) { lineChartInstance.destroy(); lineChartInstance = null; }
+      const canvas = document.getElementById('line-chart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      const data = generateChartData(persona, totalSEK, years);
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 108);
+      grad.addColorStop(0, 'rgba(212,105,58,0.18)');
+      grad.addColorStop(1, 'rgba(212,105,58,0)');
+      lineChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: data.map((_,i) => i), datasets: [{ data, borderColor: '#D4693A', borderWidth: 1.5, backgroundColor: grad, fill: true, tension: 0.35, pointRadius: 0 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: { display: false },
+            y: {
+              position: 'right',
+              grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+              border: { display: false },
+              ticks: { font: { size: 9 }, color: 'rgba(240,237,232,0.25)', maxTicksLimit: 3, callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : Math.round(v/1000)+'k' },
+            }
+          }
+        }
+      });
+      const anchors = HISTORY_ANCHORS[persona] ?? HISTORY_ANCHORS.carl;
+      const startF = interpolateFraction(anchors, years * 12);
+      const gainPct = startF > 0 ? ((1 - startF) / startF) * 100 : 0;
+      const label = document.getElementById('chart-gain-label');
+      if (label) {
+        label.textContent = (gainPct >= 0 ? '+' : '') + gainPct.toFixed(1) + '%';
+        label.className = 'chart-period-gain ' + (gainPct >= 0 ? 'gain-pos' : 'gain-neg');
+      }
+    }
+
+    function switchChartPeriod(years, btn) {
+      document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      initLineChart(state.persona, state._summaryTotalSEK ?? 0, years);
+    }
+
+    function initDonutChart(resolvedAccounts) {
+      if (donutChartInstance) { donutChartInstance.destroy(); donutChartInstance = null; }
+      const canvas = document.getElementById('donut-chart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      const iColors = ['#D4693A','#b85229','#804015','#603010'];
+      const cColors = ['#4a4742','#5f5b56','#74706a','#898580'];
+      let ii = 0, ci = 0;
+      const labels = [], values = [], colors = [];
+      const total = resolvedAccounts.reduce((s, a) => s + a.resolvedSEK, 0);
+      for (const a of resolvedAccounts) {
+        if (!a.resolvedSEK) continue;
+        labels.push(a.name);
+        values.push(a.resolvedSEK);
+        colors.push(a.portfolioId ? iColors[ii++ % iColors.length] : cColors[ci++ % cColors.length]);
+      }
+      const legend = document.getElementById('donut-legend');
+      if (legend) {
+        legend.innerHTML = labels.map((l, i) => {
+          const pct = total > 0 ? ((values[i] / total) * 100).toFixed(0) : '0';
+          return `<div class="donut-item"><div class="donut-dot" style="background:${colors[i]}"></div><span class="donut-label">${l}</span><span class="donut-pct">${pct}%</span></div>`;
+        }).join('');
+      }
+      donutChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: { datasets: [{ data: values, backgroundColor: colors, borderColor: '#141210', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, animation: false, cutout: '68%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+      });
+    }
+
+    function positionRowHtml(pos) {
+      const valSEK = pos.currentValueSEK ?? pos.costBasisSEK;
+      const valStr = valSEK != null ? 'SEK ' + fmtSEK(valSEK) : '—';
+      const wt = pos.weight != null ? (pos.weight * 100).toFixed(0) + '%' : '';
+      const gl = pos.glPct != null ? (pos.glPct >= 0 ? '+' : '') + pos.glPct.toFixed(1) + '%' : null;
+      return `<div class="position-row">
+        <div class="pos-left"><div class="pos-name">${escapeHtml(pos.name)}</div>${wt ? `<div class="pos-weight">${wt} of account</div>` : ''}</div>
+        <div class="pos-right"><div class="pos-value">${valStr}</div>${gl ? `<div class="pos-gl ${pos.glPct >= 0 ? 'gain' : 'loss'}">${gl}</div>` : ''}</div>
+      </div>`;
+    }
+
+    function accountRowWithPositions(a, portfolioSummary) {
+      const amountStr = fmtSEK(a.resolvedSEK ?? a.staticSEK ?? 0);
+      const entry = portfolioSummary && a.portfolioId ? portfolioSummary.find(s => s.id === a.portfolioId) : null;
+      const hasPosns = entry?.positions?.length > 0;
+      const uid = 'ac-' + (a.portfolioId ?? a.name.replace(/[^a-z0-9]/gi, ''));
+      return `<div class="account-wrap">
+        <div class="account-row${hasPosns ? ' expandable' : ''}" id="${uid}-row"${hasPosns ? ` onclick="togglePositions('${uid}')"` : ''}>
+          <div class="ac-icon" style="background:${a.color}">${a.icon}</div>
+          <div class="ac-info">
+            <div class="ac-name">${a.name}${hasPosns ? '<span class="ac-chevron">▾</span>' : ''}</div>
+            <div class="ac-sub">${a.sub}</div>
+          </div>
+          <div><div class="ac-amount">${amountStr}</div><span class="ac-currency">${a.currency}</span></div>
+        </div>
+        ${hasPosns ? `<div class="positions-wrap" id="${uid}-wrap">${entry.positions.map(positionRowHtml).join('')}</div>` : ''}
+      </div>`;
+    }
+
+    function togglePositions(uid) {
+      const row = document.getElementById(uid + '-row');
+      const wrap = document.getElementById(uid + '-wrap');
+      if (!row || !wrap) return;
+      row.classList.toggle('expanded', wrap.classList.toggle('open'));
+    }
+
+    // ─── SUMMARY SCREEN ───────────────────────────────────────
+
     function showSummaryScreen(data) {
       showPhoneScreen('summary');
 
-      // Resolve live values for all accounts
       const resolvedAccounts = data.accounts.map(a => ({ ...a, resolvedSEK: resolveAccountSEK(a) }));
       const resolvedProperty = (data.property ?? []).map(a => ({ ...a, resolvedSEK: a.staticSEK ?? 0 }));
 
-      // Total = sum of all account amounts (property excluded from investable total)
       const totalSEK = resolvedAccounts.reduce((s, a) => s + a.resolvedSEK, 0);
+      state._summaryTotalSEK = totalSEK;
       const totalStr = 'SEK ' + fmtSEK(totalSEK);
 
+      const portfolioSummary = state.portfolioData?.portfolioSummary ?? null;
+
       const propertySection = resolvedProperty.length
-        ? `<p class="summary-section-label">Property</p>${resolvedProperty.map(a => accountRow(a)).join('')}`
+        ? `<p class="summary-section-label">Property</p>${resolvedProperty.map(a => accountRowWithPositions(a, null)).join('')}`
         : '';
 
       const scroll = document.getElementById('summary-scroll');
@@ -1660,32 +1865,41 @@
         <p class="summary-total-label">Total investable assets</p>
         <p class="summary-total">${totalStr}</p>
         <p class="summary-sub-total">${data.totalSub}</p>
+
+        <p class="summary-section-label">History</p>
+        <div class="chart-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="chart-tabs">
+              <button class="chart-tab active" onclick="switchChartPeriod(1,this)">1Y</button>
+              <button class="chart-tab" onclick="switchChartPeriod(3,this)">3Y</button>
+              <button class="chart-tab" onclick="switchChartPeriod(5,this)">5Y</button>
+            </div>
+            <p class="chart-period-gain" id="chart-gain-label"></p>
+          </div>
+          <div class="chart-wrap"><canvas id="line-chart"></canvas></div>
+        </div>
+
+        <p class="summary-section-label">Allocation</p>
+        <div class="donut-section">
+          <div class="donut-canvas-wrap"><canvas id="donut-chart"></canvas></div>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
+
         <p class="summary-section-label">Accounts</p>
-        ${resolvedAccounts.map(a => accountRow(a)).join('')}
+        ${resolvedAccounts.map(a => accountRowWithPositions(a, portfolioSummary)).join('')}
         ${propertySection}
       `;
 
       document.getElementById('emilli-opener').textContent = data.opener;
 
+      requestAnimationFrame(() => {
+        initLineChart(state.persona, totalSEK, 1);
+        initDonutChart(resolvedAccounts);
+      });
+
       setTimeout(() => {
         document.getElementById('emilli-entry').classList.add('show');
       }, 3500);
-    }
-
-    function accountRow(a) {
-      const amountStr = fmtSEK(a.resolvedSEK ?? a.staticSEK ?? 0);
-      return `
-        <div class="account-row">
-          <div class="ac-icon" style="background:${a.color}">${a.icon}</div>
-          <div class="ac-info">
-            <div class="ac-name">${a.name}</div>
-            <div class="ac-sub">${a.sub}</div>
-          </div>
-          <div>
-            <div class="ac-amount">${amountStr}</div>
-            <span class="ac-currency">${a.currency}</span>
-          </div>
-        </div>`;
     }
 
     function showSummary() {
