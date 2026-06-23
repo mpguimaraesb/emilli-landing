@@ -1147,12 +1147,114 @@
     .pos-gl.loss { color: #e07070; }
 
     .summary-sub-total { margin-bottom: 16px; }
+
+    /* ─── INTRO ANIMATION ───────────────────────────────────── */
+
+    #screen-intro {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .intro-aura {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 720px; height: 720px;
+      background: radial-gradient(ellipse, rgba(212,105,58,0.07) 0%, rgba(122,31,31,0.03) 50%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .intro-wrap {
+      position: relative;
+      width: min(390px, 100vw);
+      height: min(844px, 92svh);
+      display: flex;
+      flex-direction: column;
+      border-radius: 52px;
+      border: 8px solid transparent;
+      overflow: hidden;
+      transition: border-color 1.2s ease, box-shadow 1.2s ease, background-color 1.2s ease;
+      z-index: 1;
+    }
+    .intro-wrap.chrome-show {
+      border-color: #1a1612;
+      background-color: var(--surface);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05),
+        0 40px 100px rgba(0,0,0,0.75),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .intro-island {
+      position: absolute;
+      top: 13px; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 36px;
+      background: #000;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.3s;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .intro-wrap.chrome-show .intro-island { opacity: 1; }
+
+    .intro-feed {
+      flex: 1;
+      padding: 60px 28px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      position: relative;
+      z-index: 1;
+    }
+    .intro-feed::-webkit-scrollbar { display: none; }
+
+    .intro-skip-btn {
+      position: fixed;
+      bottom: 20px; right: 24px;
+      font-size: 11px; font-weight: 400; letter-spacing: 0.08em;
+      color: var(--dim);
+      background: none; border: none;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: color 0.2s;
+      z-index: 100;
+      padding: 8px;
+    }
+    .intro-skip-btn:hover { color: var(--muted); }
+
+    @media (max-width: 440px) {
+      .intro-wrap { border-radius: 0; border: none; width: 100vw; height: 100svh; }
+      .intro-island { display: none; }
+    }
   </style>
 </head>
 <body>
 
+  <!-- ─── INTRO ANIMATION ─────────────────────────────────────── -->
+  <div id="screen-intro" class="screen active">
+    <div class="intro-aura"></div>
+    <div class="intro-wrap" id="intro-wrap">
+      <div class="intro-island"></div>
+      <div class="intro-feed" id="intro-feed">
+        <div class="typing-indicator" id="intro-typing">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+    <button class="intro-skip-btn" onclick="skipIntroAnim()">Skip intro</button>
+  </div>
+
   <!-- ─── GATE ───────────────────────────────────────────────── -->
-  <div id="screen-gate" class="screen active">
+  <div id="screen-gate" class="screen">
     <p class="gate-mark">emilli<span class="dot">.</span></p>
     <div class="gate-box">
       <p class="gate-label">Access code</p>
@@ -1397,8 +1499,92 @@
       }
     }
 
-    // Skip gate if already authed this session
-    if (sessionStorage.getItem('emilli-demo-auth')) showScreen('persona');
+    // ─── INTRO ANIMATION ──────────────────────────────────────
+
+    const INTRO_MESSAGES = [
+      { role: 'emilli', text: 'Two accounts. Fourteen positions. No shared view. Have you ever looked at the whole picture at once?' },
+      { role: 'user',   text: 'Not really. I know each one individually.' },
+      { role: 'emilli', text: 'Your largest position has grown to nearly 15% of your portfolio. Did you plan for that?' },
+      { role: 'user',   text: 'It performed well. I kept it.' },
+      { role: 'emilli', text: 'A position that outperforms becomes a decision you never made.' },
+      { role: 'user',   text: 'I hadn\'t thought about it that way.' },
+      { role: 'emilli', text: 'Your top three holdings represent 37% of everything you have invested. Let me show you what that means in practice.' },
+      { role: 'user',   text: 'Show me.' },
+    ];
+
+    const INTRO_CHROME_AT = 4; // phone frame materialises after this message index
+
+    let _introTimer = null;
+    let _introDone = false;
+
+    function startIntro() {
+      if (sessionStorage.getItem('emilli-demo-auth')) {
+        showScreen('persona');
+        return;
+      }
+      showScreen('intro');
+      _introTimer = setTimeout(() => playIntroStep(0), 600);
+    }
+
+    function playIntroStep(idx) {
+      if (_introDone) return;
+      const feed = document.getElementById('intro-feed');
+      const typing = document.getElementById('intro-typing');
+
+      if (idx >= INTRO_MESSAGES.length) {
+        typing.classList.remove('show');
+        _introTimer = setTimeout(() => { if (!_introDone) finishIntro(); }, 900);
+        return;
+      }
+
+      if (idx === INTRO_CHROME_AT) {
+        document.getElementById('intro-wrap').classList.add('chrome-show');
+      }
+
+      const step = INTRO_MESSAGES[idx];
+      const isEmilli = step.role === 'emilli';
+
+      if (isEmilli) typing.classList.remove('user-side');
+      else typing.classList.add('user-side');
+      typing.classList.add('show');
+      feed.scrollTop = feed.scrollHeight;
+
+      const typingMs = Math.max(700, step.text.length * 14);
+      _introTimer = setTimeout(() => {
+        if (_introDone) return;
+        typing.classList.remove('show', 'user-side');
+
+        const div = document.createElement('div');
+        div.className = `msg ${isEmilli ? 'emilli' : 'user'}`;
+        div.style.cssText = 'opacity:0;transform:translateY(10px);transition:opacity 0.35s ease,transform 0.35s ease;';
+        div.innerHTML = `
+          <span class="msg-sender">${isEmilli ? 'emilli.' : 'You'}</span>
+          <div class="msg-bubble">${escapeHtml(step.text)}</div>`;
+        feed.insertBefore(div, typing);
+        feed.scrollTop = feed.scrollHeight;
+
+        requestAnimationFrame(() => {
+          div.style.opacity = '1';
+          div.style.transform = 'none';
+        });
+
+        _introTimer = setTimeout(() => playIntroStep(idx + 1), isEmilli ? 1000 : 700);
+      }, typingMs);
+    }
+
+    function finishIntro() {
+      _introDone = true;
+      showScreen('gate');
+    }
+
+    function skipIntroAnim() {
+      _introDone = true;
+      clearTimeout(_introTimer);
+      showScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate');
+    }
+
+    // ─── STARTUP ──────────────────────────────────────────────
+    startIntro();
 
     // ─── SCREEN TRANSITIONS ───────────────────────────────────
 
@@ -1505,19 +1691,34 @@
 
     const SCRIPTS = {
       carl: [
-        { role: 'emilli', text: 'From what you told me, you have a portfolio you manage actively at Nordnet and a separate Avanza account you haven\'t touched in years. Have you ever looked at both together?' },
-        { role: 'user',   text: 'Not really. I just treat them separately.' },
-        { role: 'emilli', text: 'Two accounts, two strategies, no shared picture. Let me connect everything and show you what you actually have.' },
+        { role: 'emilli', text: 'From what you told me, you manage actively at Nordnet and have an Avanza account you haven\'t touched in years. Have you ever seen both together?' },
+        { role: 'user',   text: 'Not really. I treat them separately — different strategies.' },
+        { role: 'emilli', text: 'What strategy does the Avanza account actually have at this point? Two index funds, set up before you started stock picking.' },
+        { role: 'user',   text: 'It\'s just sitting there, I suppose. I don\'t really think about it.' },
+        { role: 'emilli', text: 'You built something deliberate at Nordnet — Swedish industrials, companies you follow closely. And left something passive at Avanza. But you\'ve never seen them as one picture.' },
+        { role: 'user',   text: 'When you put it that way, I guess not.' },
+        { role: 'emilli', text: 'Atlas Copco started as a thesis in 2020. It\'s now your largest position. Did you plan for it to be 15% of your portfolio?' },
+        { role: 'user',   text: 'It did well. I kept it. I suppose it just grew.' },
       ],
       sara: [
-        { role: 'emilli', text: 'How long has your salary been sitting in a current account?' },
-        { role: 'user',   text: 'About two years. It\'s just easier given my compliance situation.' },
-        { role: 'emilli', text: 'This would unfortunately mean, two years of inflation playing against your financials. Let me show you what that picture actually looks like.' },
+        { role: 'emilli', text: 'How long has your salary been accumulating in a current account?' },
+        { role: 'user',   text: 'About two years. My compliance situation makes investing complicated.' },
+        { role: 'emilli', text: 'What exactly do the rules say?' },
+        { role: 'user',   text: '30-day hold periods. Pre-trade notifications. It\'s enough friction that I just stopped trying.' },
+        { role: 'emilli', text: 'There\'s a difference between rules that prevent something and friction that discourages it. Which is it for you?' },
+        { role: 'user',   text: 'Honestly? Mostly friction. I just haven\'t had time to untangle it.' },
+        { role: 'emilli', text: 'Two years of a lawyer\'s salary sitting at near zero. That\'s not a compliance problem — that\'s a planning gap. Let me show you what that picture looks like.' },
+        { role: 'user',   text: 'I know it\'s not ideal. I just never got around to it.' },
       ],
       erik: [
-        { role: 'emilli', text: 'You have Avanza for investments, SEB for day-to-day, and that Nordea account still open. How do you keep a view across all of them?' },
-        { role: 'user',   text: 'I use a spreadsheet that I update monthly. It works... but takes time to put everything together.' },
-        { role: 'emilli', text: 'Let me show you what it looks like when it\'s all in one place — including some exposure your spreadsheet almost certainly isn\'t capturing.' },
+        { role: 'emilli', text: 'You have Avanza for investments, SEB for day-to-day, and that Nordea account you never closed. How do you keep a picture across all of them?' },
+        { role: 'user',   text: 'A spreadsheet I update monthly. It works — but it takes time to pull everything together.' },
+        { role: 'emilli', text: 'What does the spreadsheet show you that you find most useful?' },
+        { role: 'user',   text: 'Individual positions, prices, gain and loss per holding. Pretty detailed.' },
+        { role: 'emilli', text: 'Does it show how much Nvidia you hold in total — including what\'s inside your ETFs?' },
+        { role: 'user',   text: 'No. The ETFs are just a single line each. I\'d have to calculate that manually.' },
+        { role: 'emilli', text: 'That\'s the gap. Nvidia appears in your direct position, inside the Nasdaq-100, and inside VWCE. Your spreadsheet sees one. Let me show you all three.' },
+        { role: 'user',   text: 'That\'s actually something I\'ve been wondering about.' },
       ],
     };
 
