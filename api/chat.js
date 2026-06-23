@@ -136,31 +136,53 @@ module.exports = async function handler(req, res) {
     content: String(m.content).slice(0, 1000),
   }));
 
+  const body = JSON.stringify({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 500,
+    system: buildSystemPrompt(portfolioPromptText, triggerMandate),
+    messages: sanitised,
+  });
+
+  const headers = {
+    'x-api-key': process.env.ANTHROPIC_API_KEY,
+    'anthropic-version': '2023-06-01',
+    'content-type': 'application/json',
+  };
+
+  // Retry up to 3 times on 529 (overloaded) with exponential backoff
   let response;
-  try {
-    response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 500,
-        system: buildSystemPrompt(portfolioPromptText, triggerMandate),
-        messages: sanitised,
-      }),
-    });
-  } catch (err) {
-    console.error('Fetch error:', err);
-    return res.status(500).json({ error: 'Network error' });
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers,
+        body,
+      });
+    } catch (err) {
+      console.error(`Attempt ${attempt} fetch error:`, err);
+      if (attempt === 3) return res.status(500).json({ error: 'Network error' });
+      await new Promise(r => setTimeout(r, attempt * 1000));
+      continue;
+    }
+
+    if (response.status === 529) {
+      console.warn(`Attempt ${attempt}: Anthropic overloaded (529), retrying...`);
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, attempt * 1500));
+        continue;
+      }
+    }
+
+    break;
   }
 
   if (!response.ok) {
-    const body = await response.text();
-    console.error('Anthropic error:', response.status, body);
-    return res.status(500).json({ error: `Anthropic ${response.status}: ${body.slice(0, 200)}` });
+    const text = await response.text();
+    console.error('Anthropic error:', response.status, text);
+    if (response.status === 529) {
+      return res.status(503).json({ error: 'emilli is momentarily busy — please try again in a few seconds.' });
+    }
+    return res.status(500).json({ error: `Anthropic ${response.status}: ${text.slice(0, 200)}` });
   }
 
   const data = await response.json();

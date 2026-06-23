@@ -1710,9 +1710,15 @@
           }),
         });
         const data = await res.json();
-        reply = data.content || `Error: ${data.error || 'No content returned'}`;
+        if (data.content) {
+          reply = data.content;
+        } else if (res.status === 503) {
+          reply = data.error || 'emilli is momentarily busy — please try again in a few seconds.';
+        } else {
+          reply = data.error || 'Something went wrong. Please try again.';
+        }
       } catch (err) {
-        reply = `Network error: ${err.message}`;
+        reply = 'Connection issue — please check your network and try again.';
       }
 
       document.getElementById('typing').classList.remove('show');
