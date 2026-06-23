@@ -2,10 +2,38 @@
 // Live prices fetched from Twelve Data at runtime; gain/loss computed per position.
 // Twelve Data symbol format: hyphens become dots, exchange suffix after colon (e.g. ATCO.B:OMX).
 // EQQQ:LSE is priced in GBp (pence) — divide by 100 for GBP before converting to SEK.
+// FX rates fetched from Frankfurter.app (ECB rates, free, no API key).
 
-const FX_SYMBOLS = ['USD/SEK', 'EUR/SEK', 'GBP/SEK', 'DKK/SEK'];
-// Fallback FX rates if API is unavailable
+// Fallback FX rates used when Frankfurter is unavailable
 const FX_FALLBACK = { USD: 10.35, EUR: 11.15, GBP: 13.05, DKK: 1.49 };
+
+// Approximate prices — used when Twelve Data is rate-limited (429) or unavailable.
+// Currency matches the acqCcy for each symbol.
+const PRICE_FALLBACK = {
+  'ATCO.B:OMX':    182,   // SEK
+  'VOLV.B:OMX':    258,   // SEK
+  'SAND:OMX':      232,   // SEK
+  'HEXA.B:OMX':    122,   // SEK
+  'SEB.A:OMX':     184,   // SEK
+  'INVE.B:OMX':    306,   // SEK
+  'SWED.A:OMX':    227,   // SEK
+  'ERIC.B:OMX':     78,   // SEK
+  'ALFA:OMX':      528,   // SEK
+  'SKF.B:OMX':     245,   // SEK
+  'NIBE.B:OMX':     46,   // SEK
+  'ABB:OMX':       660,   // SEK
+  'SSAB.A:OMX':     67,   // SEK
+  'HUSQ.B:OMX':     50,   // SEK
+  'VWCE:XETR':     115,   // EUR
+  'EQQQ:LSE':    37000,   // GBp (pence)
+  'ASML:Euronext': 718,   // EUR
+  'NOVO.B:OMXC':   672,   // DKK
+  'NVDA':          131,   // USD
+};
+
+// Module-level cache — persists across warm Vercel function invocations (~5 min TTL)
+const RESULT_CACHE = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const PORTFOLIO_DEFS = {
 
@@ -101,60 +129,82 @@ const PORTFOLIO_DEFS = {
   },
 };
 
-// ─── TWELVE DATA FETCH ────────────────────────────────────────
+// ─── FX FETCH (Frankfurter.app — ECB rates, free, no API key) ────
+
+async function fetchFX() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=SEK&to=USD,EUR,GBP,DKK', {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error(`Frankfurter HTTP ${res.status}`);
+    const data = await res.json();
+    const r = data.rates;
+    // r gives units of foreign currency per 1 SEK — invert to get SEK per foreign unit
+    const fx = { USD: 1 / r.USD, EUR: 1 / r.EUR, GBP: 1 / r.GBP, DKK: 1 / r.DKK };
+    console.log('Frankfurter FX:', JSON.stringify(fx));
+    return fx;
+  } catch (err) {
+    console.warn('Frankfurter FX failed, using fallback:', err.message);
+    return { ...FX_FALLBACK };
+  }
+}
+
+// ─── TWELVE DATA FETCH (stock prices only) ────────────────────
+
+function buildFallbackPrices(symbols) {
+  const prices = {};
+  for (const sym of symbols) {
+    if (PRICE_FALLBACK[sym] != null) prices[sym] = PRICE_FALLBACK[sym];
+  }
+  console.log(`Using ${Object.keys(prices).length} fallback prices`);
+  return prices;
+}
 
 async function fetchTwelveData(symbols) {
+  const unique = [...new Set(symbols.filter(Boolean))];
   const apiKey = process.env.TWELVE_DATA_API_KEY;
   if (!apiKey) {
-    console.error('TWELVE_DATA_API_KEY is not set — check Vercel environment variables');
-    return { prices: {}, fx: {} };
+    console.error('TWELVE_DATA_API_KEY not set — using fallback prices');
+    return { prices: buildFallbackPrices(unique), isLive: false };
   }
-  console.log(`Twelve Data: key present (${apiKey.slice(0, 4)}...)`);
+  console.log(`Twelve Data: key present (${apiKey.slice(0, 4)}...), requesting ${unique.length} symbols`);
 
-
-  const unique = [...new Set(symbols.filter(Boolean))];
-  const allSymbols = [...unique, ...FX_SYMBOLS];
-  // Do NOT encodeURIComponent the whole symbol string — Twelve Data requires literal commas
-  // and colons (e.g. ATCO.B:OMX, USD/SEK). Only the apikey needs no special treatment.
-  const symbolParam = allSymbols.join(',');
+  const symbolParam = unique.join(',');
   const url = `https://api.twelvedata.com/price?symbol=${symbolParam}&apikey=${apiKey}`;
-
-  console.log(`Twelve Data: requesting ${allSymbols.length} symbols:`, symbolParam);
 
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const rawText = await res.text();
+
+    if (res.status === 429) {
+      console.warn('Twelve Data 429 — rate limited, using fallback prices');
+      return { prices: buildFallbackPrices(unique), isLive: false };
+    }
     if (!res.ok) {
-      const body = await res.text();
-      console.error(`Twelve Data HTTP ${res.status}:`, body.slice(0, 300));
-      return { prices: {}, fx: {} };
+      console.error(`Twelve Data HTTP ${res.status}:`, rawText.slice(0, 300));
+      return { prices: buildFallbackPrices(unique), isLive: false };
     }
 
-    const rawText = await res.text();
     console.log('Twelve Data raw response (first 500):', rawText.slice(0, 500));
     const data = JSON.parse(rawText);
     const prices = {};
-    const fx = {};
 
     for (const sym of unique) {
       const entry = data[sym];
       if (entry?.price && !entry.code) {
         prices[sym] = parseFloat(entry.price);
-      } else if (entry?.code) {
-        console.warn(`Twelve Data [${sym}]: ${entry.message ?? entry.code}`);
+      } else {
+        if (entry?.code) console.warn(`Twelve Data [${sym}]: ${entry.message ?? entry.code}`);
+        if (PRICE_FALLBACK[sym] != null) prices[sym] = PRICE_FALLBACK[sym];
       }
     }
 
-    const fxKeys = { 'USD/SEK': 'USD', 'EUR/SEK': 'EUR', 'GBP/SEK': 'GBP', 'DKK/SEK': 'DKK' };
-    for (const [pair, ccy] of Object.entries(fxKeys)) {
-      const entry = data[pair];
-      if (entry?.price && !entry.code) fx[ccy] = parseFloat(entry.price);
-    }
-
-    console.log(`Twelve Data OK: ${Object.keys(prices).length}/${unique.length} prices, ${Object.keys(fx).length}/4 FX rates`);
-    return { prices, fx };
+    const liveCount = Object.keys(prices).filter(s => !PRICE_FALLBACK[s] || prices[s] !== PRICE_FALLBACK[s]).length;
+    console.log(`Twelve Data OK: ${liveCount}/${unique.length} live prices`);
+    return { prices, isLive: liveCount > 0 };
   } catch (err) {
     console.error('Twelve Data fetch error:', err.message);
-    return { prices: {}, fx: {} };
+    return { prices: buildFallbackPrices(unique), isLive: false };
   }
 }
 
@@ -448,7 +498,14 @@ module.exports = async function handler(req, res) {
     };
   }
 
-  // Collect all Twelve Data symbols across accounts
+  const cacheKey = `${personaId}-${tweakValue ?? ''}`;
+  const cached = RESULT_CACHE.get(cacheKey);
+  if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
+    console.log(`Cache hit: ${cacheKey}`);
+    return res.status(200).json(cached.data);
+  }
+
+  // Collect Twelve Data symbols across accounts
   const symbols = [];
   for (const account of def.accounts) {
     for (const pos of account.positions) {
@@ -456,8 +513,12 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  const { prices, fx } = await fetchTwelveData([...new Set(symbols)]);
-  const liveData = Object.keys(prices).length > 0;
+  // Fetch stock prices and FX in parallel
+  const [{ prices, isLive }, fx] = await Promise.all([
+    fetchTwelveData([...new Set(symbols)]),
+    fetchFX(),
+  ]);
+  const liveData = isLive;
 
   // Compute metrics per account
   const computedAccounts = def.accounts.map(account => computeAccount(account, prices, fx));
@@ -491,11 +552,15 @@ module.exports = async function handler(req, res) {
     })),
   }));
 
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
-  return res.status(200).json({
+  const result = {
     promptText,
     portfolioSummary,
     liveData,
     fetchedAt: new Date().toISOString(),
-  });
+  };
+
+  RESULT_CACHE.set(cacheKey, { ts: Date.now(), data: result });
+
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+  return res.status(200).json(result);
 };

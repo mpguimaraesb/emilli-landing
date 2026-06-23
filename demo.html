@@ -475,6 +475,49 @@
       transition: width 0.6s ease;
     }
 
+    /* ─── ANALYSING SCREEN ─────────────────────────────────── */
+
+    #p-analysing {
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 24px;
+      padding: 40px 28px;
+      text-align: center;
+    }
+
+    .analysing-logo {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      opacity: 0.9;
+    }
+    .analysing-logo .dot { color: var(--orange); }
+
+    .analysing-spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: a-spin 0.75s linear infinite;
+    }
+    @keyframes a-spin { to { transform: rotate(360deg); } }
+
+    .analysing-text {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .analysing-sub {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
     /* ─── SUMMARY SCREEN ────────────────────────────────────── */
 
     #p-summary {
@@ -1114,6 +1157,14 @@
           </div>
         </div>
 
+        <!-- Analysing screen — shown while waiting for portfolio data if animations finish first -->
+        <div class="p-screen" id="p-analysing">
+          <div class="analysing-logo">emilli<span class="dot">.</span></div>
+          <div class="analysing-spinner"></div>
+          <p class="analysing-text">Analysing your portfolio…</p>
+          <p class="analysing-sub">Reading positions, prices<br>and exposure across accounts</p>
+        </div>
+
         <!-- Summary screen -->
         <div class="p-screen" id="p-summary">
           <div class="summary-scroll" id="summary-scroll"></div>
@@ -1434,44 +1485,25 @@
 
     // ─── START DEMO ───────────────────────────────────────────
 
-    async function startDemo() {
+    function startDemo() {
       if (!state.persona) return;
 
-      const btn = document.getElementById('start-btn');
-      const loadingNote = document.getElementById('loading-note');
-      btn.disabled = true;
-      btn.textContent = 'Loading…';
-      loadingNote.style.display = 'block';
-
-      // Fetch live portfolio data
-      try {
-        const res = await fetch('/api/portfolio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ personaId: state.persona, tweakValue: getTweakValue() }),
+      // Reset portfolio state for this run
+      state.portfolioPromptText = undefined;
+      state.portfolioFetchPromise = fetch('/api/portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personaId: state.persona, tweakValue: getTweakValue() }),
+      })
+        .then(res => res.json())
+        .then(portfolio => {
+          state.portfolioPromptText = portfolio.promptText ?? null;
+        })
+        .catch(() => {
+          state.portfolioPromptText = null;
         });
-        const portfolio = await res.json();
-        state.portfolioPromptText = portfolio.promptText ?? null;
-      } catch {
-        state.portfolioPromptText = null; // chat.js will reject — handled below
-      }
 
-      btn.disabled = false;
-      btn.textContent = 'Start →';
-      loadingNote.style.display = 'none';
-
-      if (!state.portfolioPromptText) {
-        loadingNote.style.display = 'block';
-        loadingNote.style.color = '#e07070';
-        loadingNote.textContent = 'Could not load market data. Try again.';
-        setTimeout(() => {
-          loadingNote.style.display = 'none';
-          loadingNote.style.color = 'var(--blue)';
-          loadingNote.textContent = 'Fetching live market data…';
-        }, 3000);
-        return;
-      }
-
+      // Go immediately — animations play while fetch happens in the background
       showScreen('phone');
       updateClock();
       const data = getPersonaData();
@@ -1516,7 +1548,7 @@
       function tick() {
         if (i >= total) {
           bar.style.width = '100%';
-          setTimeout(() => showSummaryScreen(data), 700);
+          setTimeout(() => awaitPortfolioAndShowSummary(data), 700);
           return;
         }
         items[i].classList.add('done');
@@ -1526,6 +1558,22 @@
         setTimeout(tick, 750 + Math.random() * 400);
       }
       setTimeout(tick, 600);
+    }
+
+    // ─── PORTFOLIO AWAIT + SUMMARY ────────────────────────────
+
+    async function awaitPortfolioAndShowSummary(data) {
+      // If fetch resolves within 300 ms, skip loading screen entirely
+      let timerFired = false;
+      const timer = setTimeout(() => {
+        timerFired = true;
+        showPhoneScreen('analysing');
+      }, 300);
+
+      await state.portfolioFetchPromise;
+      clearTimeout(timer);
+
+      showSummaryScreen(data);
     }
 
     // ─── SUMMARY SCREEN ───────────────────────────────────────
