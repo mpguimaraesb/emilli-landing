@@ -72,7 +72,7 @@ const PORTFOLIO_DEFS = {
   },
 
   erik: {
-    personaContext: `Erik, 43, Göteborg. Engineering manager at a mid-size tech company. Has been investing deliberately since his late 20s. Built a globally diversified core through VWCE — bought at launch in 2019 and averaged down heavily during the COVID crash in March 2020. Added individual positions over the years as conviction built: EQQQ in 2021, Nvidia in 2021 and again in early 2023, ASML in 2023 as the AI capex thesis crystallised. Understands diversification, index composition, factor exposure, and correlation. Tracks everything in a monthly spreadsheet. The spreadsheet captures individual positions accurately but cannot show aggregate single-name exposure across overlapping ETFs — specifically, how much Nvidia he carries directly, via EQQQ, and via VWCE simultaneously. Banking with SEB. Has a Nordea account he never closed after switching banks years ago. Has a forgotten Handelsbanken joint account from a previous relationship. Owns his Göteborg apartment outright.`,
+    personaContext: `Erik, 43, Göteborg. Engineering manager at a mid-size tech company. Has been investing deliberately since his late 20s. Built a globally diversified core through VWCE — bought at launch in 2019 and averaged down heavily during the COVID crash in March 2020. Added EQQQ in 2021 as a deliberate tech tilt. In H2 2024, once the AI capex thesis was clearly playing out, he bought Nvidia directly at ~$110 post-split — a considered position, not speculation. Added ASML the same year as the pick-and-shovel play on AI infrastructure. Understands diversification, index composition, factor exposure, and correlation. Tracks everything in a monthly spreadsheet. The spreadsheet captures individual positions accurately but cannot show aggregate single-name exposure across overlapping ETFs — specifically, how much Nvidia he carries directly, via EQQQ, and via VWCE simultaneously. Banking with SEB. Has a Nordea account he never closed after switching banks years ago. Has a forgotten Handelsbanken joint account from a previous relationship. Owns his Göteborg apartment outright.`,
     accounts: [
       {
         id: 'avanza',
@@ -80,7 +80,7 @@ const PORTFOLIO_DEFS = {
         note: 'Deliberately constructed since 2019. VWCE as core, individual positions around it.',
         positions: [
           { sym: 'VWCE:XETR',    name: 'Vanguard FTSE All-World UCITS ETF', isin: 'IE00B3RBWM25', type: 'etf',   shares: 200, acqPrice: 70,   acqCcy: 'EUR', sector: 'Global ETF',  country: 'Global',       acqNote: '2019 launch + Mar 2020 COVID crash avg down. NVDA ~3.5% of FTSE All-World.' },
-          { sym: 'NVDA',          name: 'Nvidia',                             isin: 'US67066G1040', type: 'stock', shares: 450, acqPrice: 17,   acqCcy: 'USD', sector: 'Technology',  country: 'USA',          acqNote: '150 shares at ~$20 post-split (2021 GPU thesis) + 300 at ~$15 post-split (Jan 2023). Also inside EQQQ (~8% of Nasdaq-100) and VWCE (~3.5% of FTSE All-World).' },
+          { sym: 'NVDA',          name: 'Nvidia',                             isin: 'US67066G1040', type: 'stock', shares: 80,  acqPrice: 110,  acqCcy: 'USD', sector: 'Technology',  country: 'USA',          acqNote: 'H2 2024 — bought once the AI capex thesis was clearly playing out. Also inside EQQQ (~8% of Nasdaq-100) and VWCE (~3.5% of FTSE All-World).' },
           { sym: 'EQQQ:LSE',      name: 'Invesco Nasdaq-100 UCITS ETF',      isin: 'IE0032077012', type: 'etf',   shares: 120, acqPrice: 3100, acqCcy: 'GBp', sector: 'Technology',  country: 'Global',       acqNote: '2021. Price in GBp (pence). NVDA ~8% of Nasdaq-100 index.' },
           { sym: 'ATCO.B:OMX',   name: 'Atlas Copco B',                      isin: 'SE0011166610', type: 'stock', shares: 75,  acqPrice: 138,  acqCcy: 'SEK', sector: 'Industrials', country: 'Sweden',       acqNote: '2022 market dip' },
           { sym: 'NOVO.B:OMXC',  name: 'Novo Nordisk B',                     isin: 'DK0060534915', type: 'stock', shares: 50,  acqPrice: 730,  acqCcy: 'DKK', sector: 'Healthcare',  country: 'Denmark',      acqNote: '2021–22, pre-GLP1 explosion. Pharma diversification thesis.' },
@@ -384,10 +384,10 @@ function buildTensions(personaId, def, computedAccounts) {
     const eqqq  = positions.find(p => p.sym === 'EQQQ:LSE');
     const asml  = positions.find(p => p.sym === 'ASML:Euronext');
 
-    const nvdaWt  = nvda?.weight  ?? 0.15;
-    const vwceWt  = vwce?.weight  ?? 0.40;
+    const nvdaWt  = nvda?.weight  ?? 0.33;
+    const vwceWt  = vwce?.weight  ?? 0.39;
     const eqqqWt  = eqqq?.weight  ?? 0.10;
-    const asmlWt  = asml?.weight  ?? 0.05;
+    const asmlWt  = asml?.weight  ?? 0.08;
 
     const nvdaViaEqqq = eqqqWt * 0.08;
     const nvdaViaVwce = vwceWt * 0.035;
