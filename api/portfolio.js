@@ -106,15 +106,20 @@ const PORTFOLIO_DEFS = {
 async function fetchTwelveData(symbols) {
   const apiKey = process.env.TWELVE_DATA_API_KEY;
   if (!apiKey) {
-    console.error('TWELVE_DATA_API_KEY is not set');
+    console.error('TWELVE_DATA_API_KEY is not set — check Vercel environment variables');
     return { prices: {}, fx: {} };
   }
+  console.log(`Twelve Data: key present (${apiKey.slice(0, 4)}...)`);
+
 
   const unique = [...new Set(symbols.filter(Boolean))];
   const allSymbols = [...unique, ...FX_SYMBOLS];
-  const url = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(allSymbols.join(','))}&apikey=${apiKey}`;
+  // Do NOT encodeURIComponent the whole symbol string — Twelve Data requires literal commas
+  // and colons (e.g. ATCO.B:OMX, USD/SEK). Only the apikey needs no special treatment.
+  const symbolParam = allSymbols.join(',');
+  const url = `https://api.twelvedata.com/price?symbol=${symbolParam}&apikey=${apiKey}`;
 
-  console.log(`Twelve Data: requesting ${allSymbols.length} symbols (${unique.length} prices + ${FX_SYMBOLS.length} FX)`);
+  console.log(`Twelve Data: requesting ${allSymbols.length} symbols:`, symbolParam);
 
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
@@ -124,7 +129,9 @@ async function fetchTwelveData(symbols) {
       return { prices: {}, fx: {} };
     }
 
-    const data = await res.json();
+    const rawText = await res.text();
+    console.log('Twelve Data raw response (first 500):', rawText.slice(0, 500));
+    const data = JSON.parse(rawText);
     const prices = {};
     const fx = {};
 
