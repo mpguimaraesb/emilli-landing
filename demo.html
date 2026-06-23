@@ -1308,11 +1308,10 @@
       carl: () => ({
         name: 'Carl',
         greeting: 'Good morning,',
-        total: 'SEK 230,000',
         totalSub: '2 investment accounts',
         accounts: [
-          { icon: 'N', color: '#1a3a6c', name: 'Nordnet ISK', sub: '14 positions · Swedish stocks + 1 ETF', amount: '187,000', currency: 'SEK' },
-          { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: '2 index funds · Untouched since 2022', amount: '43,000', currency: 'SEK' },
+          { icon: 'N', color: '#1a3a6c', name: 'Nordnet ISK', sub: '14 positions · Swedish industrials', currency: 'SEK', portfolioId: 'nordnet', staticSEK: 187000 },
+          { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: '2 index funds · Untouched since 2022', currency: 'SEK', portfolioId: 'avanza', staticSEK: 43000 },
         ],
         property: null,
         opener: 'Your top three positions are all Swedish industrials. That\'s not just company concentration — it\'s sector and geography stacked. Was that a deliberate thesis?',
@@ -1322,22 +1321,18 @@
         ],
       }),
       sara: (idleCash) => {
-        const totalCash = idleCash + 78000;
-        const sebStr = idleCash.toLocaleString('sv-SE');
-        const totalCashStr = totalCash.toLocaleString('sv-SE');
-        const total = totalCash + 31000;
+        const totalCashStr = (idleCash + 78000).toLocaleString('sv-SE');
         return {
           name: 'Sara',
           greeting: 'Good morning,',
-          total: 'SEK ' + total.toLocaleString('sv-SE'),
           totalSub: 'Cash + investments · Property SEK 4,800,000',
           accounts: [
-            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Current account · Tied to mortgage', amount: sebStr, currency: 'SEK' },
-            { icon: 'SW', color: '#e8000d', name: 'Swedbank', sub: 'Savings account', amount: '78,000', currency: 'SEK' },
-            { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: 'Index funds · Untouched since 2021', amount: '31,000', currency: 'SEK' },
+            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Current account · Tied to mortgage', currency: 'SEK', staticSEK: idleCash },
+            { icon: 'SW', color: '#e8000d', name: 'Swedbank', sub: 'Savings account', currency: 'SEK', staticSEK: 78000 },
+            { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: '4 positions · Untouched since 2021', currency: 'SEK', portfolioId: 'avanza', staticSEK: 31000 },
           ],
           property: [
-            { icon: 'H', color: '#5c3d1e', name: 'Apartment, Stockholm', sub: 'Mortgage SEK 2,900,000 · Equity SEK 1,900,000', amount: '4,800,000', currency: 'SEK' },
+            { icon: 'H', color: '#5c3d1e', name: 'Apartment, Stockholm', sub: 'Mortgage SEK 2,900,000 · Equity SEK 1,900,000', currency: 'SEK', staticSEK: 4800000 },
           ],
           opener: `You have SEK ${totalCashStr} sitting across two cash accounts earning near zero. Is that a deliberate choice?`,
           connections: [
@@ -1349,21 +1344,19 @@
       },
       erik: (numBanks) => {
         const extraAccounts = [];
-        if (numBanks >= 3) extraAccounts.push({ icon: 'NB', color: '#003087', name: 'Nordea', sub: 'Old account · Never closed', amount: '44,000', currency: 'SEK' });
-        if (numBanks >= 4) extraAccounts.push({ icon: 'HB', color: '#00205b', name: 'Handelsbanken', sub: 'Forgotten joint account', amount: '12,000', currency: 'SEK' });
-        const total = 210000 + 340000 + (numBanks >= 3 ? 44000 : 0) + (numBanks >= 4 ? 12000 : 0);
+        if (numBanks >= 3) extraAccounts.push({ icon: 'NB', color: '#003087', name: 'Nordea', sub: 'Old account · Never closed', currency: 'SEK', staticSEK: 44000 });
+        if (numBanks >= 4) extraAccounts.push({ icon: 'HB', color: '#00205b', name: 'Handelsbanken', sub: 'Forgotten joint account', currency: 'SEK', staticSEK: 12000 });
         return {
           name: 'Erik',
           greeting: 'Good morning,',
-          total: 'SEK ' + total.toLocaleString('sv-SE'),
           totalSub: 'Cash + investments · Property SEK 4,200,000',
           accounts: [
-            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Savings account', amount: '210,000', currency: 'SEK' },
-            { icon: 'AV', color: '#2c6e2c', name: 'Avanza', sub: 'VWCE core · Nvidia · Nasdaq-100 · 7 positions', amount: '340,000', currency: 'SEK' },
+            { icon: 'S', color: '#003087', name: 'SEB', sub: 'Savings account', currency: 'SEK', staticSEK: 210000 },
+            { icon: 'AV', color: '#2c6e2c', name: 'Avanza', sub: 'VWCE core · Nvidia · Nasdaq-100 · 7 positions', currency: 'SEK', portfolioId: 'avanza', staticSEK: 340000 },
             ...extraAccounts,
           ],
           property: [
-            { icon: 'H', color: '#5c3d1e', name: 'Apartment, Göteborg', sub: 'Fully paid · Equity SEK 4,200,000', amount: '4,200,000', currency: 'SEK' },
+            { icon: 'H', color: '#5c3d1e', name: 'Apartment, Göteborg', sub: 'Fully paid · Equity SEK 4,200,000', currency: 'SEK', staticSEK: 4200000 },
           ],
           opener: `You have a solid global core — but Nvidia shows up three times in this picture: directly in your Avanza, inside the Nasdaq-100 ETF, and inside VWCE. Your effective exposure to a single name is higher than what your spreadsheet shows. Did you ever calculate it that way?`,
           connections: [
@@ -1490,6 +1483,7 @@
 
       // Reset portfolio state for this run
       state.portfolioPromptText = undefined;
+      state.portfolioData = null;
       state.portfolioFetchPromise = fetch('/api/portfolio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1497,6 +1491,7 @@
       })
         .then(res => res.json())
         .then(portfolio => {
+          state.portfolioData = portfolio;
           state.portfolioPromptText = portfolio.promptText ?? null;
         })
         .catch(() => {
@@ -1578,11 +1573,31 @@
 
     // ─── SUMMARY SCREEN ───────────────────────────────────────
 
+    function resolveAccountSEK(account) {
+      if (account.portfolioId && state.portfolioData?.portfolioSummary) {
+        const computed = state.portfolioData.portfolioSummary.find(a => a.id === account.portfolioId);
+        if (computed && computed.totalValueSEK != null) return Math.round(computed.totalValueSEK);
+      }
+      return account.staticSEK ?? 0;
+    }
+
+    function fmtSEK(n) {
+      return Math.round(n).toLocaleString('sv-SE');
+    }
+
     function showSummaryScreen(data) {
       showPhoneScreen('summary');
 
-      const propertySection = data.property && data.property.length
-        ? `<p class="summary-section-label">Property</p>${data.property.map(a => accountRow(a)).join('')}`
+      // Resolve live values for all accounts
+      const resolvedAccounts = data.accounts.map(a => ({ ...a, resolvedSEK: resolveAccountSEK(a) }));
+      const resolvedProperty = (data.property ?? []).map(a => ({ ...a, resolvedSEK: a.staticSEK ?? 0 }));
+
+      // Total = sum of all account amounts (property excluded from investable total)
+      const totalSEK = resolvedAccounts.reduce((s, a) => s + a.resolvedSEK, 0);
+      const totalStr = 'SEK ' + fmtSEK(totalSEK);
+
+      const propertySection = resolvedProperty.length
+        ? `<p class="summary-section-label">Property</p>${resolvedProperty.map(a => accountRow(a)).join('')}`
         : '';
 
       const scroll = document.getElementById('summary-scroll');
@@ -1590,10 +1605,10 @@
         <p class="summary-greeting">${data.greeting}</p>
         <p class="summary-name">${data.name}.</p>
         <p class="summary-total-label">Total investable assets</p>
-        <p class="summary-total">${data.total}</p>
+        <p class="summary-total">${totalStr}</p>
         <p class="summary-sub-total">${data.totalSub}</p>
         <p class="summary-section-label">Accounts</p>
-        ${data.accounts.map(a => accountRow(a)).join('')}
+        ${resolvedAccounts.map(a => accountRow(a)).join('')}
         ${propertySection}
       `;
 
@@ -1605,6 +1620,7 @@
     }
 
     function accountRow(a) {
+      const amountStr = fmtSEK(a.resolvedSEK ?? a.staticSEK ?? 0);
       return `
         <div class="account-row">
           <div class="ac-icon" style="background:${a.color}">${a.icon}</div>
@@ -1613,7 +1629,7 @@
             <div class="ac-sub">${a.sub}</div>
           </div>
           <div>
-            <div class="ac-amount">${a.amount}</div>
+            <div class="ac-amount">${amountStr}</div>
             <span class="ac-currency">${a.currency}</span>
           </div>
         </div>`;
