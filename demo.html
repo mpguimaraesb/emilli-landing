@@ -1142,6 +1142,228 @@
       flex-shrink: 0;
     }
 
+    /* ─── Portfolio drawer ──────────────────────────────────── */
+    .drawer-backdrop {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 50;
+      border-radius: inherit;
+    }
+    .drawer-backdrop.open { display: block; }
+
+    .portfolio-drawer {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 78%;
+      max-width: 300px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      border-radius: inherit;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      z-index: 51;
+      transform: translateX(-105%);
+      transition: transform 0.3s cubic-bezier(0.32,0,0.67,0);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .portfolio-drawer.open {
+      transform: translateX(0);
+      transition: transform 0.3s cubic-bezier(0.33,1,0.68,1);
+    }
+
+    .drawer-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .drawer-logo {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-logo-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px rgba(212,105,58,0.7);
+      flex-shrink: 0;
+    }
+    .drawer-close {
+      background: none; border: none;
+      color: var(--dim); font-size: 18px;
+      cursor: pointer; padding: 4px;
+      line-height: 1;
+    }
+    .drawer-close:hover { color: var(--muted); }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0 16px;
+    }
+    .drawer-body::-webkit-scrollbar { display: none; }
+
+    .drawer-section-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 16px 18px 8px;
+    }
+
+    .drawer-account {
+      padding: 0 10px 4px;
+    }
+    .drawer-account-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 8px;
+      border-radius: 10px;
+    }
+    .drawer-account-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      letter-spacing: -0.02em;
+    }
+    .drawer-account-name {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text);
+      flex: 1;
+    }
+    .drawer-account-val {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    .drawer-position {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 8px 7px 46px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin: 0 10px;
+    }
+    .drawer-position:hover { background: var(--surface2); }
+    .drawer-pos-name {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--muted);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .drawer-pos-gl {
+      font-size: 11px;
+      font-weight: 400;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .drawer-pos-gl.pos { color: #5a9e6f; }
+    .drawer-pos-gl.neg { color: #9e5a5a; }
+    .drawer-pos-gl.neu { color: var(--dim); }
+
+    .drawer-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 18px;
+    }
+
+    .drawer-actions {
+      padding: 8px 10px 0;
+    }
+    .drawer-action-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 8px;
+      border-radius: 10px;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+    .drawer-action-btn:hover { background: var(--surface2); color: var(--text); }
+    .drawer-action-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    /* Hamburger button */
+    .chat-menu-btn {
+      background: none; border: none;
+      padding: 4px 6px 4px 0;
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      gap: 4px; justify-content: center;
+      opacity: 0.55;
+      transition: opacity 0.2s;
+    }
+    .chat-menu-btn:hover { opacity: 0.9; }
+    .chat-menu-btn span {
+      display: block;
+      width: 16px; height: 1.5px;
+      background: var(--text);
+      border-radius: 2px;
+    }
+
+    /* Snackbar */
+    .snackbar {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 300;
+      padding: 9px 18px;
+      border-radius: 100px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 60;
+    }
+    .snackbar.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     /* Chat input */
     .chat-input-area {
       padding: 10px 16px 20px;
@@ -1534,6 +1756,9 @@
         <!-- Chat screen -->
         <div class="p-screen" id="p-chat">
           <div class="chat-header">
+            <button class="chat-menu-btn" onclick="openDrawer()" aria-label="Open portfolio">
+              <span></span><span></span><span></span>
+            </button>
             <button class="chat-back" onclick="showSummary()">← Back</button>
             <div class="chat-aura-sm"></div>
             <span class="chat-title">emilli.</span>
@@ -1578,6 +1803,25 @@
           <p class="chat-cap-note" id="cap-note"></p>
         </div>
       </div>
+
+      <!-- Portfolio drawer -->
+      <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+      <div class="portfolio-drawer" id="portfolio-drawer">
+        <div class="drawer-header">
+          <div class="drawer-logo">
+            <div class="drawer-logo-dot"></div>
+            emilli.
+          </div>
+          <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+        <div class="drawer-body" id="drawer-body">
+          <!-- populated by buildDrawer() -->
+        </div>
+      </div>
+
+      <!-- Snackbar -->
+      <div class="snackbar" id="snackbar"></div>
+    </div>
     </div>
   </div>
 
@@ -2676,6 +2920,108 @@
       input.disabled = false;
       input.focus();
       btn.disabled = true;
+    }
+
+    // ─── PORTFOLIO DRAWER ─────────────────────────────────────
+
+    let _snackTimer = null;
+
+    function showSnackbar(msg) {
+      const el = document.getElementById('snackbar');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(_snackTimer);
+      _snackTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    function openDrawer() {
+      buildDrawer();
+      document.getElementById('portfolio-drawer').classList.add('open');
+      document.getElementById('drawer-backdrop').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('portfolio-drawer').classList.remove('open');
+      document.getElementById('drawer-backdrop').classList.remove('open');
+    }
+
+    function drawerAskAbout(name) {
+      closeDrawer();
+      const input = document.getElementById('chat-input');
+      if (!input) return;
+      input.value = `Tell me about my ${name} position`;
+      input.dispatchEvent(new Event('input'));
+      input.focus();
+    }
+
+    function buildDrawer() {
+      const body = document.getElementById('drawer-body');
+      const data = getPersonaData();
+      const portfolioSummary = state.portfolioData?.portfolioSummary ?? null;
+
+      let html = '';
+
+      // ── Portfolio section ──
+      html += `<div class="drawer-section-label">Portfolio</div>`;
+
+      for (const account of (data.accounts ?? [])) {
+        const summary = portfolioSummary?.find(s => s.id === account.portfolioId);
+        const val = summary
+          ? 'SEK ' + fmtSEK(summary.totalValueSEK)
+          : account.staticSEK
+            ? 'SEK ' + fmtSEK(account.staticSEK)
+            : '';
+
+        const iconColor = account.color ?? '#444';
+        html += `<div class="drawer-account">
+          <div class="drawer-account-header">
+            <div class="drawer-account-icon" style="background:${iconColor}">${escapeHtml(account.icon ?? account.name[0])}</div>
+            <span class="drawer-account-name">${escapeHtml(account.name)}</span>
+            <span class="drawer-account-val">${escapeHtml(val)}</span>
+          </div>`;
+
+        if (summary?.positions?.length) {
+          for (const pos of summary.positions) {
+            const glClass = pos.glPct == null ? 'neu' : pos.glPct > 0 ? 'pos' : 'neg';
+            const glStr = pos.glPct == null ? '' : (pos.glPct > 0 ? '+' : '') + pos.glPct.toFixed(1) + '%';
+            html += `<div class="drawer-position" onclick="drawerAskAbout(${JSON.stringify(pos.name)})">
+              <span class="drawer-pos-name">${escapeHtml(pos.name)}</span>
+              <span class="drawer-pos-gl ${glClass}">${escapeHtml(glStr)}</span>
+            </div>`;
+          }
+        }
+
+        html += `</div>`;
+      }
+
+      // Cash / savings accounts (Sara)
+      if (state.persona === 'sara') {
+        const cashSEK = (state.tweakValue ?? 520000) + 78000;
+        html += `<div class="drawer-account">
+          <div class="drawer-account-header">
+            <div class="drawer-account-icon" style="background:#555">$</div>
+            <span class="drawer-account-name">Cash accounts</span>
+            <span class="drawer-account-val">SEK ${fmtSEK(cashSEK)}</span>
+          </div>
+        </div>`;
+      }
+
+      html += `<div class="drawer-divider"></div>`;
+
+      // ── Actions ──
+      html += `<div class="drawer-section-label">Actions</div>`;
+      html += `<div class="drawer-actions">
+        <button class="drawer-action-btn" onclick="closeDrawer(); showSummary();">
+          <div class="drawer-action-icon">↗</div>
+          View full summary
+        </button>
+        <button class="drawer-action-btn" onclick="showSnackbar('Voice coming soon — stay tuned.')">
+          <div class="drawer-action-icon">🎙</div>
+          Talk to emilli
+        </button>
+      </div>`;
+
+      body.innerHTML = html;
     }
 
     // ─── MANDATE ──────────────────────────────────────────────
