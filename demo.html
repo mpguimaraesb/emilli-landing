@@ -2054,9 +2054,9 @@
         <div class="chart-section">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div class="chart-tabs">
-              <button class="chart-tab active" onclick="switchChartPeriod(1,this)">1Y</button>
+              <button class="chart-tab" onclick="switchChartPeriod(1,this)">1Y</button>
               <button class="chart-tab" onclick="switchChartPeriod(3,this)">3Y</button>
-              <button class="chart-tab" onclick="switchChartPeriod(5,this)">5Y</button>
+              <button class="chart-tab active" onclick="switchChartPeriod(5,this)">5Y</button>
             </div>
             <p class="chart-period-gain" id="chart-gain-label"></p>
           </div>
@@ -2077,7 +2077,7 @@
       document.getElementById('emilli-opener').textContent = data.opener;
 
       requestAnimationFrame(() => {
-        initLineChart(state.persona, totalSEK, 1);
+        initLineChart(state.persona, totalSEK, 5);
         initDonutChart(resolvedAccounts);
       });
 
