@@ -2093,6 +2093,16 @@
       </svg>
     </div>
 
+    <!-- ── Chat screen annotation ── -->
+    <div class="annotation" id="ann-chat"
+         style="right: calc(50% + 200px); top: 10%; flex-direction: row-reverse; align-items: center; gap: 8px;">
+      <span class="ann-text">check your detailed<br>portfolio or go back<br>to summary</span>
+      <svg class="ann-arrow" width="52" height="44" viewBox="0 0 52 44" fill="none">
+        <path d="M46,36 C38,22 20,12 8,8" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        <path d="M8,8 L14,14 M8,8 L16,8" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+
     <!-- ── Summary screen annotations ── -->
 
     <!-- Profile circle → right side, top -->
@@ -2512,7 +2522,8 @@
 
     const PERSONA_ANNS   = ['ann-persona'];
     const SUMMARY_ANNS   = ['ann-profile', 'ann-timeline', 'ann-accounts', 'ann-reply'];
-    const ALL_ANNS       = [...PERSONA_ANNS, ...SUMMARY_ANNS];
+    const CHAT_ANNS      = ['ann-chat'];
+    const ALL_ANNS       = [...PERSONA_ANNS, ...SUMMARY_ANNS, ...CHAT_ANNS];
 
     function updateAnnotations(screenId) {
       ALL_ANNS.forEach(id => {
@@ -2521,6 +2532,7 @@
       });
       const toShow = screenId === 'persona' ? PERSONA_ANNS
                    : screenId === 'summary'  ? SUMMARY_ANNS
+                   : screenId === 'chat'     ? CHAT_ANNS
                    : [];
       toShow.forEach(id => {
         const el = document.getElementById(id);
