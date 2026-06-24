@@ -648,8 +648,8 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(to top, var(--surface) 55%, rgba(20,18,16,0.95) 75%, transparent);
-      padding: 44px 20px 24px;
+      background: linear-gradient(to top, var(--surface) 60%, rgba(20,18,16,0.92) 80%, transparent);
+      padding: 40px 16px 16px;
       opacity: 0;
       transform: translateY(12px);
       transition: opacity 0.6s ease, transform 0.6s ease;
@@ -664,16 +664,16 @@
     .emilli-bubble {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 18px 18px 18px 4px;
-      padding: 16px 18px;
-      margin-bottom: 12px;
+      border-radius: 16px;
+      overflow: hidden;
     }
 
     .eb-header {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 10px;
+      padding: 13px 14px 0;
+      cursor: pointer;
     }
 
     .eb-aura {
@@ -691,40 +691,64 @@
       color: var(--amber);
       letter-spacing: 0.04em;
       opacity: 0.85;
+      flex: 1;
+    }
+
+    .eb-chevron {
+      font-size: 11px;
+      color: var(--dim);
+      transition: transform 0.3s ease;
+      line-height: 1;
+    }
+    .emilli-bubble.expanded .eb-chevron { transform: rotate(180deg); }
+
+    .eb-text-wrap {
+      padding: 8px 14px 0;
+      cursor: pointer;
     }
 
     .eb-text {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 300;
-      line-height: 1.65;
+      line-height: 1.6;
       color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: max-height 0.35s ease;
+    }
+    .emilli-bubble.expanded .eb-text {
+      display: block;
+      overflow: visible;
     }
 
-    .reply-prompt {
+    .eb-reply {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 12px 18px;
+      padding: 10px 14px 13px;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
+      transition: background 0.15s;
     }
-    .reply-prompt:hover {
-      background: rgba(255,255,255,0.06);
-      border-color: rgba(212,105,58,0.25);
-    }
-    .reply-prompt span {
+    .eb-reply:hover { background: rgba(255,255,255,0.03); }
+    .eb-reply span {
       font-size: 13px;
       font-weight: 300;
       color: var(--dim);
       flex: 1;
     }
-    .reply-arrow {
-      font-size: 14px;
-      color: var(--amber);
-      opacity: 0.6;
+    .eb-reply-arrow {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--amber);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      flex-shrink: 0;
     }
 
     /* ─── CHAT SCREEN ───────────────────────────────────────── */
@@ -1739,16 +1763,19 @@
         <div class="p-screen" id="p-summary">
           <div class="summary-scroll" id="summary-scroll"></div>
           <div class="emilli-entry" id="emilli-entry">
-            <div class="emilli-bubble">
-              <div class="eb-header">
+            <div class="emilli-bubble" id="emilli-bubble">
+              <div class="eb-header" onclick="toggleInsight()">
                 <div class="eb-aura"></div>
                 <span class="eb-name">emilli.</span>
+                <span class="eb-chevron">▾</span>
               </div>
-              <p class="eb-text" id="emilli-opener"></p>
-            </div>
-            <div class="reply-prompt" onclick="openChat()">
-              <span>Reply...</span>
-              <span class="reply-arrow">↑</span>
+              <div class="eb-text-wrap" onclick="toggleInsight()">
+                <p class="eb-text" id="emilli-opener"></p>
+              </div>
+              <div class="eb-reply" onclick="openChat()">
+                <span>Reply...</span>
+                <div class="eb-reply-arrow">↑</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2488,6 +2515,10 @@
       setTimeout(() => {
         document.getElementById('emilli-entry').classList.add('show');
       }, 3500);
+    }
+
+    function toggleInsight() {
+      document.getElementById('emilli-bubble').classList.toggle('expanded');
     }
 
     function showSummary() {
