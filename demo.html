@@ -1160,85 +1160,47 @@
       justify-content: center;
       flex-direction: column;
       position: relative;
-      animation: introFadeIn 1s ease forwards;
+      animation: introFadeIn 2s ease forwards;
     }
 
     .intro-aura {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 720px; height: 720px;
-      background: radial-gradient(ellipse, rgba(212,105,58,0.07) 0%, rgba(122,31,31,0.03) 50%, transparent 70%);
+      width: 900px; height: 900px;
+      background: radial-gradient(ellipse, rgba(212,105,58,0.09) 0%, rgba(122,31,31,0.04) 40%, transparent 70%);
       pointer-events: none;
     }
 
     .intro-wrap {
       position: relative;
-      width: min(390px, 100vw);
-      height: min(844px, 92svh);
+      width: min(480px, 90vw);
       display: flex;
       flex-direction: column;
-      border-radius: 52px;
-      border: 8px solid transparent;
-      overflow: hidden;
-      transition: border-color 1.2s ease, box-shadow 1.2s ease, background-color 1.2s ease;
       z-index: 1;
     }
-    .intro-wrap.chrome-show {
-      border-color: #1a1612;
-      background-color: var(--surface);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.05),
-        0 40px 100px rgba(0,0,0,0.75),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-    }
-
-    .intro-island {
-      position: absolute;
-      top: 13px; left: 50%;
-      transform: translateX(-50%);
-      width: 126px; height: 36px;
-      background: #000;
-      border-radius: 20px;
-      opacity: 0;
-      transition: opacity 0.7s ease 0.3s;
-      z-index: 10;
-      pointer-events: none;
-    }
-    .intro-wrap.chrome-show .intro-island { opacity: 1; }
 
     .intro-feed {
-      flex: 1;
-      padding: 60px 28px 16px;
+      padding: 0 8px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: none;
-      position: relative;
-      z-index: 1;
+      gap: 16px;
     }
-    .intro-feed::-webkit-scrollbar { display: none; }
 
     .intro-skip-btn {
       position: fixed;
-      bottom: 20px; right: 24px;
-      font-size: 11px; font-weight: 400; letter-spacing: 0.08em;
-      color: var(--dim);
+      bottom: 28px; right: 28px;
+      font-size: 11px; font-weight: 400; letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(240,237,232,0.18);
       background: none; border: none;
       font-family: var(--font);
       cursor: pointer;
-      transition: color 0.2s;
+      transition: color 0.4s;
       z-index: 100;
       padding: 8px;
     }
-    .intro-skip-btn:hover { color: var(--muted); }
-
-    @media (max-width: 440px) {
-      .intro-wrap { border-radius: 0; border: none; width: 100vw; height: 100svh; }
-      .intro-island { display: none; }
-    }
+    .intro-skip-btn:hover { color: rgba(240,237,232,0.45); }
   </style>
 </head>
 <body>
@@ -1247,7 +1209,6 @@
   <div id="screen-intro" class="screen active">
     <div class="intro-aura"></div>
     <div class="intro-wrap" id="intro-wrap">
-      <div class="intro-island"></div>
       <div class="intro-feed" id="intro-feed">
         <div class="typing-indicator" id="intro-typing">
           <div class="typing-dot"></div>
@@ -1515,8 +1476,6 @@
       { role: 'emilli', text: 'A position that outperforms becomes a decision you never made.' },
     ];
 
-    const INTRO_CHROME_AT = 2; // phone frame materialises after this message index
-
     let _introTimer = null;
     let _introDone = false;
 
@@ -1526,7 +1485,7 @@
         return;
       }
       showScreen('intro');
-      _introTimer = setTimeout(() => playIntroStep(0), 600);
+      _introTimer = setTimeout(() => playIntroStep(0), 1200);
     }
 
     function playIntroStep(idx) {
@@ -1536,12 +1495,9 @@
 
       if (idx >= INTRO_MESSAGES.length) {
         typing.classList.remove('show');
-        _introTimer = setTimeout(() => { if (!_introDone) finishIntro(); }, 1400);
+        // Hold on the last message, then dissolve everything
+        _introTimer = setTimeout(() => { if (!_introDone) finishIntro(); }, 3000);
         return;
-      }
-
-      if (idx === INTRO_CHROME_AT) {
-        document.getElementById('intro-wrap').classList.add('chrome-show');
       }
 
       const step = INTRO_MESSAGES[idx];
@@ -1550,28 +1506,36 @@
       if (isEmilli) typing.classList.remove('user-side');
       else typing.classList.add('user-side');
       typing.classList.add('show');
-      feed.scrollTop = feed.scrollHeight;
 
-      const typingMs = Math.max(800, step.text.length * 16);
+      const typingMs = Math.max(1100, step.text.length * 20);
       _introTimer = setTimeout(() => {
         if (_introDone) return;
         typing.classList.remove('show', 'user-side');
 
         const div = document.createElement('div');
         div.className = `msg ${isEmilli ? 'emilli' : 'user'}`;
-        div.style.cssText = 'opacity:0;transform:translateY(16px);transition:opacity 0.6s ease,transform 0.6s ease;';
+        div.style.cssText = 'opacity:0;transform:translateY(22px);transition:opacity 1.4s ease,transform 1.4s ease;';
         div.innerHTML = `
           <span class="msg-sender">${isEmilli ? 'emilli.' : 'You'}</span>
           <div class="msg-bubble">${escapeHtml(step.text)}</div>`;
         feed.insertBefore(div, typing);
-        feed.scrollTop = feed.scrollHeight;
+
+        // Dim older messages as new one appears
+        const allMsgs = [...feed.querySelectorAll('.msg')];
+        const dimTargets = allMsgs.slice(0, -1); // everything except the newest
+        dimTargets.forEach((m, i) => {
+          const age = dimTargets.length - i; // 1 = most recent prior
+          const targetOpacity = age === 1 ? 0.45 : age === 2 ? 0.25 : 0.12;
+          m.style.transition = 'opacity 2s ease';
+          m.style.opacity = String(targetOpacity);
+        });
 
         requestAnimationFrame(() => requestAnimationFrame(() => {
           div.style.opacity = '1';
           div.style.transform = 'none';
         }));
 
-        _introTimer = setTimeout(() => playIntroStep(idx + 1), isEmilli ? 1300 : 1000);
+        _introTimer = setTimeout(() => playIntroStep(idx + 1), isEmilli ? 2200 : 1600);
       }, typingMs);
     }
 
@@ -1593,13 +1557,13 @@
 
     function finishIntro() {
       _introDone = true;
-      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 1000, 900);
+      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 2500, 2000);
     }
 
     function skipIntroAnim() {
       _introDone = true;
       clearTimeout(_introTimer);
-      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 350, 600);
+      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 600, 800);
     }
 
     // ─── STARTUP ──────────────────────────────────────────────
