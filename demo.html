@@ -982,6 +982,170 @@
     }
     .mandate-thanks.show { display: block; }
 
+    /* ─── Visual cards ──────────────────────────────────────── */
+    .vis-card {
+      align-self: flex-start;
+      max-width: 90%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 2px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .vis-card.show {
+      opacity: 1;
+      transform: none;
+    }
+    .vis-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+
+    /* Bar row shared */
+    .vis-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+    .vis-bar-row:last-child { margin-bottom: 0; }
+    .vis-bar-name {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--muted);
+      width: 90px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vis-bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      position: relative;
+      overflow: visible;
+    }
+    .vis-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.9s cubic-bezier(0.22,1,0.36,1);
+      width: 0;
+    }
+    .vis-bar-fill.amber { background: var(--amber); }
+    .vis-bar-fill.bordeaux { background: var(--bx); }
+    .vis-bar-fill.muted { background: rgba(240,237,232,0.2); }
+    .vis-bar-fill.stacked-a { background: var(--amber); }
+    .vis-bar-fill.stacked-b { background: rgba(212,105,58,0.4); }
+    .vis-bar-fill.stacked-c { background: rgba(212,105,58,0.18); }
+    .vis-bar-val {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text);
+      width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Guideline marker on bar track */
+    .vis-bar-marker {
+      position: absolute;
+      top: -3px;
+      width: 2px;
+      height: 12px;
+      background: rgba(240,237,232,0.25);
+      border-radius: 1px;
+    }
+    .vis-marker-label {
+      font-size: 9px;
+      color: var(--dim);
+      position: absolute;
+      top: -16px;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    /* Scenario: two bars before/after */
+    .vis-scenario-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .vis-scenario-label {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--muted);
+      width: 48px;
+      flex-shrink: 0;
+    }
+    .vis-scenario-bar {
+      flex: 1;
+      height: 28px;
+      border-radius: 6px;
+      transition: width 0.9s cubic-bezier(0.22,1,0.36,1);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .vis-scenario-bar.before { background: rgba(212,105,58,0.18); }
+    .vis-scenario-bar.after  { background: rgba(122,31,31,0.5); }
+    .vis-note {
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--dim);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    /* Stacked bar for geo / aggregate exposure */
+    .vis-stacked-track {
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 8px;
+    }
+    .vis-stacked-seg {
+      height: 100%;
+      transition: width 0.9s cubic-bezier(0.22,1,0.36,1);
+      width: 0;
+    }
+    .vis-stacked-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .vis-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--muted);
+    }
+    .vis-legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     /* Chat input */
     .chat-input-area {
       padding: 10px 16px 20px;
@@ -2117,6 +2281,269 @@
       }, 1200);
     }
 
+    // ─── VISUAL CARDS ─────────────────────────────────────────
+
+    function fmtSEKShort(n) {
+      if (n >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+      if (n >= 1e3) return Math.round(n / 1e3) + 'k';
+      return Math.round(n).toString();
+    }
+
+    function animateBars(card) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        card.querySelectorAll('.vis-bar-fill[data-w]').forEach(el => {
+          el.style.width = el.dataset.w + '%';
+        });
+        card.querySelectorAll('.vis-stacked-seg[data-w]').forEach(el => {
+          el.style.width = el.dataset.w + '%';
+        });
+      }));
+    }
+
+    function showCard(card, container, typing) {
+      container.insertBefore(card, typing);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        card.classList.add('show');
+        animateBars(card);
+      }));
+    }
+
+    // 1. Concentration bar — single position vs 5% guideline
+    function buildConcentrationCard(posName, weightPct, portfolioData) {
+      const card = document.createElement('div');
+      card.className = 'vis-card';
+      const guideline = 5;
+      const barPct = Math.min(weightPct, 100);
+      const markerLeft = Math.min(guideline / Math.max(weightPct, guideline + 1) * 100, 100);
+
+      card.innerHTML = `
+        <div class="vis-label">Position weight</div>
+        <div class="vis-bar-row">
+          <div class="vis-bar-name">${escapeHtml(posName)}</div>
+          <div class="vis-bar-track">
+            <div class="vis-bar-fill amber" data-w="${barPct}" style="width:0"></div>
+            <div class="vis-bar-marker" style="left:${markerLeft}%">
+              <span class="vis-marker-label">5% guideline</span>
+            </div>
+          </div>
+          <div class="vis-bar-val">${weightPct.toFixed(1)}%</div>
+        </div>
+        <div class="vis-note">Professional guidelines typically cap single-name exposure at 5%.</div>`;
+      return card;
+    }
+
+    // 2. Scenario bar — portfolio before/after a drawdown
+    function buildScenarioCard(dropPct, topSharePct, totalSEK) {
+      const portfolioDropPct = topSharePct / 100 * dropPct;
+      const afterSEK = totalSEK * (1 - portfolioDropPct / 100);
+      const beforeW = 100;
+      const afterW = (afterSEK / totalSEK) * 100;
+
+      const card = document.createElement('div');
+      card.className = 'vis-card';
+      card.innerHTML = `
+        <div class="vis-label">Scenario — if concentrated positions fall ${dropPct}%</div>
+        <div class="vis-scenario-row">
+          <div class="vis-scenario-label">Today</div>
+          <div class="vis-scenario-bar before" style="width:${beforeW}%">SEK ${fmtSEKShort(totalSEK)}</div>
+        </div>
+        <div class="vis-scenario-row">
+          <div class="vis-scenario-label">After</div>
+          <div class="vis-scenario-bar after" style="width:${afterW}%">SEK ${fmtSEKShort(afterSEK)}</div>
+        </div>
+        <div class="vis-note">Portfolio drops ~${portfolioDropPct.toFixed(1)}% — concentrated positions fall ${dropPct}%, rest holds flat.</div>`;
+      return card;
+    }
+
+    // 3. Cash vs invested split
+    function buildCashCard(cashSEK, investedSEK) {
+      const total = cashSEK + investedSEK;
+      const cashPct = total > 0 ? (cashSEK / total) * 100 : 0;
+      const invPct = 100 - cashPct;
+      const card = document.createElement('div');
+      card.className = 'vis-card';
+      card.innerHTML = `
+        <div class="vis-label">Cash vs invested</div>
+        <div class="vis-bar-row">
+          <div class="vis-bar-name">Invested</div>
+          <div class="vis-bar-track">
+            <div class="vis-bar-fill amber" data-w="${invPct}" style="width:0"></div>
+          </div>
+          <div class="vis-bar-val">${invPct.toFixed(0)}%</div>
+        </div>
+        <div class="vis-bar-row">
+          <div class="vis-bar-name">Cash</div>
+          <div class="vis-bar-track">
+            <div class="vis-bar-fill muted" data-w="${cashPct}" style="width:0"></div>
+          </div>
+          <div class="vis-bar-val">${cashPct.toFixed(0)}%</div>
+        </div>
+        <div class="vis-note">SEK ${fmtSEKShort(investedSEK)} invested · SEK ${fmtSEKShort(cashSEK)} in cash</div>`;
+      return card;
+    }
+
+    // 4. Geographic breakdown — stacked bar
+    function buildGeoCard(geoMap) {
+      const entries = Object.entries(geoMap).sort((a, b) => b[1] - a[1]);
+      const colors = ['#D4693A', 'rgba(212,105,58,0.55)', 'rgba(212,105,58,0.28)', 'rgba(240,237,232,0.18)'];
+      const grouped = [];
+      let otherPct = 0;
+      entries.forEach(([ country, pct ], i) => {
+        if (i < 3) grouped.push({ country, pct });
+        else otherPct += pct;
+      });
+      if (otherPct > 0.5) grouped.push({ country: 'Other', pct: otherPct });
+
+      const segs = grouped.map((g, i) =>
+        `<div class="vis-stacked-seg" data-w="${(g.pct * 100).toFixed(1)}" style="width:0;background:${colors[i] ?? colors[3]}"></div>`
+      ).join('');
+
+      const legend = grouped.map((g, i) =>
+        `<div class="vis-legend-item"><div class="vis-legend-dot" style="background:${colors[i] ?? colors[3]}"></div>${escapeHtml(g.country)} ${(g.pct * 100).toFixed(0)}%</div>`
+      ).join('');
+
+      const card = document.createElement('div');
+      card.className = 'vis-card';
+      card.innerHTML = `
+        <div class="vis-label">Geographic exposure</div>
+        <div class="vis-stacked-track">${segs}</div>
+        <div class="vis-stacked-legend">${legend}</div>
+        <div class="vis-note">By current value of invested positions.</div>`;
+      return card;
+    }
+
+    // 5. Aggregate tech / Nvidia exposure (Erik)
+    function buildAggregateCard(directPct, eqqqEmbedPct, vwceEmbedPct) {
+      const total = directPct + eqqqEmbedPct + vwceEmbedPct;
+      const colors = ['#D4693A', 'rgba(212,105,58,0.5)', 'rgba(212,105,58,0.22)'];
+      const segs = [
+        { label: `Direct (NVDA)`, pct: directPct, color: colors[0] },
+        { label: `Via EQQQ (~8%)`, pct: eqqqEmbedPct, color: colors[1] },
+        { label: `Via VWCE (~3.5%)`, pct: vwceEmbedPct, color: colors[2] },
+      ];
+
+      const segHtml = segs.map(s =>
+        `<div class="vis-stacked-seg" data-w="${((s.pct / Math.max(total, 0.01)) * 100).toFixed(1)}" style="width:0;background:${s.color}"></div>`
+      ).join('');
+
+      const legend = segs.map(s =>
+        `<div class="vis-legend-item"><div class="vis-legend-dot" style="background:${s.color}"></div>${escapeHtml(s.label)} ${s.pct.toFixed(1)}%</div>`
+      ).join('');
+
+      const card = document.createElement('div');
+      card.className = 'vis-card';
+      card.innerHTML = `
+        <div class="vis-label">Effective Nvidia exposure — ${total.toFixed(1)}% of portfolio</div>
+        <div class="vis-stacked-track">${segHtml}</div>
+        <div class="vis-stacked-legend">${legend}</div>
+        <div class="vis-note">Direct position + ETF-embedded weight. The spreadsheet shows direct positions only.</div>`;
+      return card;
+    }
+
+    // ─── TRIGGER DETECTION ────────────────────────────────────
+
+    function detectVisual(text, persona, portfolioData) {
+      if (!portfolioData) return null;
+      const t = text.toLowerCase();
+      const summary = portfolioData.portfolioSummary ?? [];
+
+      // Compute totals
+      const totalInvestedSEK = summary.reduce((s, a) => s + (a.totalValueSEK ?? 0), 0);
+      const totalCashSEK = persona === 'sara'
+        ? ((state.tweakValue ?? 520000) + 78000)
+        : 0;
+
+      // 1. Aggregate exposure (Erik) — highest specificity, check first
+      if (persona === 'erik' && (t.includes('nvidia') || t.includes('nvda') || t.includes('aggregate') || t.includes('effective') || t.includes('triple') || t.includes('three times') || t.includes('appears') || t.includes('embedded'))) {
+        // Find positions in all accounts
+        const allPositions = summary.flatMap(a => a.positions ?? []);
+        const total = totalInvestedSEK || 1;
+        const nvdaPos = allPositions.find(p => (p.sym ?? p.name ?? '').toLowerCase().includes('nvda') || (p.name ?? '').toLowerCase().includes('nvidia'));
+        const eqqqPos = allPositions.find(p => (p.sym ?? '').toLowerCase().includes('eqqq') || (p.name ?? '').toLowerCase().includes('nasdaq-100'));
+        const vwcePos = allPositions.find(p => (p.sym ?? '').toLowerCase().includes('vwce') || (p.name ?? '').toLowerCase().includes('all-world'));
+
+        const directPct = nvdaPos ? ((nvdaPos.currentValueSEK ?? nvdaPos.costBasisSEK ?? 0) / total) * 100 : 0;
+        const eqqqVal = eqqqPos ? (eqqqPos.currentValueSEK ?? eqqqPos.costBasisSEK ?? 0) : 0;
+        const vwceVal = vwcePos ? (vwcePos.currentValueSEK ?? vwcePos.costBasisSEK ?? 0) : 0;
+        const eqqqEmbedPct = (eqqqVal * 0.08) / total * 100;
+        const vwceEmbedPct = (vwceVal * 0.035) / total * 100;
+
+        if (directPct > 0) return buildAggregateCard(directPct, eqqqEmbedPct, vwceEmbedPct);
+      }
+
+      // 2. Cash vs invested (Sara)
+      if (persona === 'sara' && totalCashSEK > 0 && (t.includes('cash') || t.includes('idle') || t.includes('sitting') || t.includes('invested') || t.includes('deploy'))) {
+        return buildCashCard(totalCashSEK, totalInvestedSEK);
+      }
+
+      // 3. Geographic breakdown
+      if (t.includes('swedish') || t.includes('geographic') || t.includes('home-country') || t.includes('nordic') || t.includes('concentration') && (t.includes('sweden') || t.includes('country'))) {
+        const geoMap = {};
+        for (const account of summary) {
+          for (const pos of (account.positions ?? [])) {
+            const country = pos.country ?? 'Other';
+            const val = pos.currentValueSEK ?? pos.costBasisSEK ?? 0;
+            geoMap[country] = (geoMap[country] ?? 0) + val;
+          }
+        }
+        const totalGeo = Object.values(geoMap).reduce((a, b) => a + b, 0);
+        if (totalGeo > 0) {
+          const normalised = {};
+          for (const [k, v] of Object.entries(geoMap)) normalised[k] = v / totalGeo;
+          return buildGeoCard(normalised);
+        }
+      }
+
+      // 4. Scenario math — "fell 30%" / "drop" / "drawdown"
+      const scenarioMatch = text.match(/fall[s]?\s+(\d+)%|drop[s]?\s+(\d+)%|down\s+(\d+)%|lose[s]?\s+(\d+)%/i);
+      if (scenarioMatch && totalInvestedSEK > 0) {
+        const dropPct = parseInt(scenarioMatch[1] ?? scenarioMatch[2] ?? scenarioMatch[3] ?? scenarioMatch[4]);
+        // Estimate top positions share from summary
+        const allPositions = summary.flatMap(a => a.positions ?? []);
+        const sorted = [...allPositions].sort((a, b) =>
+          ((b.currentValueSEK ?? b.costBasisSEK ?? 0) - (a.currentValueSEK ?? a.costBasisSEK ?? 0)));
+        const top3Val = sorted.slice(0, 3).reduce((s, p) => s + (p.currentValueSEK ?? p.costBasisSEK ?? 0), 0);
+        const top3Pct = totalInvestedSEK > 0 ? (top3Val / totalInvestedSEK) * 100 : 37;
+        if (dropPct >= 10 && dropPct <= 60) return buildScenarioCard(dropPct, top3Pct, totalInvestedSEK);
+      }
+
+      // 5. Concentration — specific position weight mentioned
+      const posMatch = text.match(/(\d+(?:\.\d+)?)\s*%\s+of\s+(your\s+)?portfolio/i)
+        ?? text.match(/(atlas copco|volvo|sandvik|hexagon|ericsson|investor b|alfa laval|skf|nibe|nvidia|asml|novo nordisk)\b.{0,60}(\d+(?:\.\d+)?)\s*%/i);
+      if (posMatch) {
+        const pctStr = posMatch[1] ?? posMatch[2];
+        const weightPct = parseFloat(pctStr);
+        if (weightPct >= 5 && weightPct <= 60) {
+          // Try to find the position name mentioned earlier in the same sentence
+          const nameMatch = text.match(/(Atlas Copco|Volvo|Sandvik|Hexagon|Nvidia|ASML|Novo Nordisk|Investor B|Ericsson|Alfa Laval|SKF|NIBE|SEB|Swedbank)/i);
+          const posName = nameMatch ? nameMatch[1] : 'Top position';
+          return buildConcentrationCard(posName, weightPct, portfolioData);
+        }
+      }
+
+      return null;
+    }
+
+    function injectVisualAfterMessage(text, msgEl, persona, portfolioData) {
+      const card = detectVisual(text, persona, portfolioData);
+      if (!card) return;
+      const container = document.getElementById('chat-messages');
+      const typing = document.getElementById('typing');
+      // Insert after msgEl
+      if (msgEl.nextSibling) {
+        container.insertBefore(card, msgEl.nextSibling);
+      } else {
+        container.appendChild(card);
+      }
+      setTimeout(() => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          card.classList.add('show');
+          animateBars(card);
+          container.scrollTop = container.scrollHeight;
+        }));
+      }, 400);
+    }
+
     function appendMessage(role, text) {
       const container = document.getElementById('chat-messages');
       const typing = document.getElementById('typing');
@@ -2129,6 +2556,10 @@
 
       container.insertBefore(div, typing);
       container.scrollTop = container.scrollHeight;
+
+      if (role === 'emilli') {
+        injectVisualAfterMessage(text, div, state.persona, state.portfolioData);
+      }
     }
 
     function escapeHtml(str) {
