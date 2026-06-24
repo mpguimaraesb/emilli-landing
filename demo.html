@@ -2080,68 +2080,71 @@
   </div>
 
   <!-- ─── PHONE ──────────────────────────────────────────────── -->
+  <!-- Shared SVG defs for annotation arrowheads -->
+  <svg style="display:none" aria-hidden="true">
+    <defs>
+      <marker id="ann-tip" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0.5 L6,3.5 L0,6.5" fill="none" stroke="rgba(212,105,58,0.65)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+  </svg>
+
   <div id="screen-phone" class="screen">
     <div class="phone-aura"></div>
 
-    <!-- ── Persona screen annotation (LEFT of phone → points RIGHT) ── -->
+    <!-- ── Persona screen annotation (LEFT → RIGHT toward cards) ── -->
     <div class="annotation" id="ann-persona"
          style="right: calc(50% + 215px); top: 35%; flex-direction: row; align-items: center; gap: 10px;">
       <span class="ann-text left">which persona<br>can you relate<br>to the most?</span>
-      <svg class="ann-arrow" width="54" height="34" viewBox="0 0 54 34" fill="none">
-        <path d="M4,14 C16,8 34,12 50,22" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M50,22 L41,16 M50,22 L44,29" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <svg class="ann-arrow" width="56" height="36" viewBox="0 0 56 36" fill="none">
+        <path d="M4,26 C12,10 36,8 53,18" stroke="rgba(212,105,58,0.65)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ann-tip)"/>
       </svg>
     </div>
 
-    <!-- ── Chat screen annotation (LEFT of phone → points RIGHT toward hamburger) ── -->
+    <!-- ── Chat screen annotation (LEFT → RIGHT toward hamburger) ── -->
     <div class="annotation" id="ann-chat"
          style="right: calc(50% + 215px); top: 8%; flex-direction: row; align-items: center; gap: 10px;">
       <span class="ann-text left">check your detailed<br>portfolio or go back<br>to summary</span>
-      <svg class="ann-arrow" width="54" height="40" viewBox="0 0 54 40" fill="none">
-        <path d="M4,34 C14,22 32,14 50,8" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M50,8 L42,12 M50,8 L46,18" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <svg class="ann-arrow" width="56" height="44" viewBox="0 0 56 44" fill="none">
+        <path d="M4,40 C14,26 36,16 53,8" stroke="rgba(212,105,58,0.65)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ann-tip)"/>
       </svg>
     </div>
 
     <!-- ── Summary screen annotations ── -->
 
-    <!-- Profile circle (RIGHT of phone → points LEFT toward profile circle) -->
+    <!-- Profile circle (RIGHT → LEFT toward profile circle) -->
     <div class="annotation" id="ann-profile"
          style="left: calc(50% + 215px); top: 8%; flex-direction: row-reverse; align-items: center; gap: 10px;">
       <span class="ann-text">check out emilli's<br>memory on you</span>
-      <svg class="ann-arrow" width="54" height="34" viewBox="0 0 54 34" fill="none">
-        <path d="M50,12 C36,6 18,12 4,22" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M4,22 L12,16 M4,22 L10,29" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <svg class="ann-arrow" width="56" height="36" viewBox="0 0 56 36" fill="none">
+        <path d="M52,26 C44,10 20,8 3,18" stroke="rgba(212,105,58,0.65)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ann-tip)"/>
       </svg>
     </div>
 
-    <!-- Year tabs (RIGHT of phone → points LEFT toward 1Y/3Y/5Y) -->
+    <!-- Year tabs (RIGHT → LEFT toward 1Y/3Y/5Y) -->
     <div class="annotation" id="ann-timeline"
          style="left: calc(50% + 215px); top: 33%; flex-direction: row-reverse; align-items: center; gap: 10px;">
       <span class="ann-text">check performance<br>on different<br>timelines</span>
-      <svg class="ann-arrow" width="54" height="30" viewBox="0 0 54 30" fill="none">
-        <path d="M50,8 C36,5 18,12 4,20" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M4,20 L12,14 M4,20 L10,27" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <svg class="ann-arrow" width="56" height="32" viewBox="0 0 56 32" fill="none">
+        <path d="M52,22 C40,6 20,6 3,16" stroke="rgba(212,105,58,0.65)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ann-tip)"/>
       </svg>
     </div>
 
-    <!-- Accounts (LEFT of phone → points RIGHT toward accounts list) -->
+    <!-- Accounts (LEFT → RIGHT toward accounts list) -->
     <div class="annotation" id="ann-accounts"
          style="right: calc(50% + 215px); top: 63%; flex-direction: row; align-items: center; gap: 10px;">
       <span class="ann-text left">see all<br>your accounts</span>
-      <svg class="ann-arrow" width="54" height="30" viewBox="0 0 54 30" fill="none">
-        <path d="M4,10 C18,5 36,12 50,20" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M50,20 L41,14 M50,20 L44,27" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <svg class="ann-arrow" width="56" height="32" viewBox="0 0 56 32" fill="none">
+        <path d="M4,22 C14,6 38,6 53,16" stroke="rgba(212,105,58,0.65)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ann-tip)"/>
       </svg>
     </div>
 
-    <!-- Reply bar (LEFT of phone → points RIGHT toward emilli card) -->
+    <!-- Reply bar (LEFT → RIGHT toward emilli card) -->
     <div class="annotation" id="ann-reply"
          style="right: calc(50% + 215px); top: 80%; flex-direction: row; align-items: center; gap: 10px;">
       <span class="ann-text left">talk to emilli<br>about your<br>portfolio</span>
-      <svg class="ann-arrow" width="54" height="40" viewBox="0 0 54 40" fill="none">
-        <path d="M4,8 C16,18 34,28 50,34" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M50,34 L41,28 M50,34 L44,38" stroke="rgba(212,105,58,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <svg class="ann-arrow" width="56" height="40" viewBox="0 0 56 40" fill="none">
+        <path d="M4,8 C16,22 36,30 53,34" stroke="rgba(212,105,58,0.65)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ann-tip)"/>
       </svg>
     </div>
 
@@ -2777,8 +2780,10 @@
     // ─── CONNECTION ANIMATION ─────────────────────────────────
 
     function runConnectionAnimation(data) {
+      showPhoneScreen('connect');
       const container = document.getElementById('connect-items');
       container.innerHTML = '';
+      document.getElementById('connect-bar').style.width = '0%';
 
       data.connections.forEach(conn => {
         const el = document.createElement('div');
