@@ -1692,6 +1692,42 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* Undo snackbar inside memory view */
+    .undo-snackbar {
+      position: absolute;
+      bottom: 16px;
+      left: 12px; right: 12px;
+      background: var(--text);
+      color: var(--surface);
+      font-size: 12px;
+      font-weight: 300;
+      padding: 11px 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 60;
+    }
+    .undo-snackbar.show {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    .undo-btn {
+      background: none; border: none;
+      font-family: var(--font);
+      font-size: 12px; font-weight: 500;
+      color: var(--amber);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
     /* Chat input */
     .chat-input-area {
       padding: 10px 16px 20px;
@@ -2196,6 +2232,10 @@
                   <button class="memory-save-btn" onclick="saveMemory()">Save</button>
                 </div>
               </div>
+            </div>
+            <div class="undo-snackbar" id="undo-snackbar">
+              <span id="undo-label">Memory removed</span>
+              <button class="undo-btn" onclick="undoDelete()">Undo</button>
             </div>
           </div>
         </div>
@@ -3410,15 +3450,48 @@
         </div>`).join('');
     }
 
+    let _pendingDelete = null; // { id, text, index }
+    let _undoTimer = null;
+
     function deleteMemory(id) {
-      _memoryState[state.persona] = (_memoryState[state.persona] ?? []).filter(m => m.id !== id);
+      const memories = _memoryState[state.persona] ?? [];
+      const index = memories.findIndex(m => m.id === id);
+      if (index === -1) return;
+
+      // Stash for potential undo
+      _pendingDelete = { id, text: memories[index].text, index };
+      _memoryState[state.persona] = memories.filter(m => m.id !== id);
+
+      // Animate card out
       const el = document.getElementById('mem-' + id);
       if (el) {
         el.style.transition = 'opacity 0.2s, transform 0.2s';
         el.style.opacity = '0';
-        el.style.transform = 'translateX(12px)';
+        el.style.transform = 'translateX(14px)';
         setTimeout(() => { renderMemoryList(); updateMemoryCountLabel(); }, 220);
       }
+
+      // Show undo snackbar
+      clearTimeout(_undoTimer);
+      const bar = document.getElementById('undo-snackbar');
+      bar.classList.add('show');
+      _undoTimer = setTimeout(() => {
+        bar.classList.remove('show');
+        _pendingDelete = null;
+      }, 4000);
+    }
+
+    function undoDelete() {
+      if (!_pendingDelete) return;
+      clearTimeout(_undoTimer);
+      const { id, text, index } = _pendingDelete;
+      _pendingDelete = null;
+      const memories = _memoryState[state.persona] ?? [];
+      memories.splice(index, 0, { id, text });
+      _memoryState[state.persona] = memories;
+      document.getElementById('undo-snackbar').classList.remove('show');
+      renderMemoryList();
+      updateMemoryCountLabel();
     }
 
     function toggleAddMemory() {
