@@ -2524,29 +2524,21 @@
       return null;
     }
 
-    function injectVisualAfterMessage(text, msgEl, persona, portfolioData) {
-      const card = detectVisual(text, persona, portfolioData);
-      if (!card) return;
-      const container = document.getElementById('chat-messages');
-      const typing = document.getElementById('typing');
-      // Insert after msgEl
-      if (msgEl.nextSibling) {
-        container.insertBefore(card, msgEl.nextSibling);
-      } else {
-        container.appendChild(card);
-      }
-      setTimeout(() => {
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          card.classList.add('show');
-          animateBars(card);
-          container.scrollTop = container.scrollHeight;
-        }));
-      }, 400);
-    }
-
     function appendMessage(role, text) {
       const container = document.getElementById('chat-messages');
       const typing = document.getElementById('typing');
+
+      // For emilli messages: insert visual card first, then text bubble below it
+      if (role === 'emilli') {
+        const card = detectVisual(text, state.persona, state.portfolioData);
+        if (card) {
+          container.insertBefore(card, typing);
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            card.classList.add('show');
+            animateBars(card);
+          }));
+        }
+      }
 
       const div = document.createElement('div');
       div.className = `msg ${role === 'emilli' ? 'emilli' : 'user'}`;
@@ -2556,10 +2548,6 @@
 
       container.insertBefore(div, typing);
       container.scrollTop = container.scrollHeight;
-
-      if (role === 'emilli') {
-        injectVisualAfterMessage(text, div, state.persona, state.portfolioData);
-      }
     }
 
     function escapeHtml(str) {
