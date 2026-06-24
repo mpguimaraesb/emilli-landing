@@ -1150,11 +1150,17 @@
 
     /* ─── INTRO ANIMATION ───────────────────────────────────── */
 
+    @keyframes introFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
     #screen-intro {
       align-items: center;
       justify-content: center;
       flex-direction: column;
       position: relative;
+      animation: introFadeIn 1s ease forwards;
     }
 
     .intro-aura {
@@ -1507,12 +1513,9 @@
       { role: 'emilli', text: 'Your largest position has grown to nearly 15% of your portfolio. Did you plan for that?' },
       { role: 'user',   text: 'It performed well. I kept it.' },
       { role: 'emilli', text: 'A position that outperforms becomes a decision you never made.' },
-      { role: 'user',   text: 'I hadn\'t thought about it that way.' },
-      { role: 'emilli', text: 'Your top three holdings represent 37% of everything you have invested. Let me show you what that means in practice.' },
-      { role: 'user',   text: 'Show me.' },
     ];
 
-    const INTRO_CHROME_AT = 4; // phone frame materialises after this message index
+    const INTRO_CHROME_AT = 2; // phone frame materialises after this message index
 
     let _introTimer = null;
     let _introDone = false;
@@ -1533,7 +1536,7 @@
 
       if (idx >= INTRO_MESSAGES.length) {
         typing.classList.remove('show');
-        _introTimer = setTimeout(() => { if (!_introDone) finishIntro(); }, 900);
+        _introTimer = setTimeout(() => { if (!_introDone) finishIntro(); }, 1400);
         return;
       }
 
@@ -1549,38 +1552,54 @@
       typing.classList.add('show');
       feed.scrollTop = feed.scrollHeight;
 
-      const typingMs = Math.max(700, step.text.length * 14);
+      const typingMs = Math.max(800, step.text.length * 16);
       _introTimer = setTimeout(() => {
         if (_introDone) return;
         typing.classList.remove('show', 'user-side');
 
         const div = document.createElement('div');
         div.className = `msg ${isEmilli ? 'emilli' : 'user'}`;
-        div.style.cssText = 'opacity:0;transform:translateY(10px);transition:opacity 0.35s ease,transform 0.35s ease;';
+        div.style.cssText = 'opacity:0;transform:translateY(16px);transition:opacity 0.6s ease,transform 0.6s ease;';
         div.innerHTML = `
           <span class="msg-sender">${isEmilli ? 'emilli.' : 'You'}</span>
           <div class="msg-bubble">${escapeHtml(step.text)}</div>`;
         feed.insertBefore(div, typing);
         feed.scrollTop = feed.scrollHeight;
 
-        requestAnimationFrame(() => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
           div.style.opacity = '1';
           div.style.transform = 'none';
-        });
+        }));
 
-        _introTimer = setTimeout(() => playIntroStep(idx + 1), isEmilli ? 1000 : 700);
+        _introTimer = setTimeout(() => playIntroStep(idx + 1), isEmilli ? 1300 : 1000);
       }, typingMs);
+    }
+
+    function fadeToScreen(targetId, fadeOutMs, fadeInMs) {
+      const intro = document.getElementById('screen-intro');
+      intro.style.transition = `opacity ${fadeOutMs}ms ease`;
+      intro.style.opacity = '0';
+      setTimeout(() => {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('screen-' + targetId);
+        target.style.opacity = '0';
+        target.classList.add('active');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          target.style.transition = `opacity ${fadeInMs}ms ease`;
+          target.style.opacity = '1';
+        }));
+      }, fadeOutMs);
     }
 
     function finishIntro() {
       _introDone = true;
-      showScreen('gate');
+      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 1000, 900);
     }
 
     function skipIntroAnim() {
       _introDone = true;
       clearTimeout(_introTimer);
-      showScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate');
+      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 350, 600);
     }
 
     // ─── STARTUP ──────────────────────────────────────────────
