@@ -27,6 +27,25 @@
       --font:       'Lexend', system-ui, sans-serif;
     }
 
+    body[data-outer="light"] { background: #eeedec !important; }
+    body[data-outer="light"] #screen-persona,
+    body[data-outer="light"] #screen-intro { background: #eeedec !important; }
+
+    #bg-toggle {
+      position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+      font-size: 15px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(4px); transition: opacity 0.2s;
+    }
+    #bg-toggle:hover { opacity: 0.8; }
+    body[data-outer="light"] #bg-toggle {
+      border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.06);
+      color: rgba(0,0,0,0.4);
+    }
+
     html, body {
       height: 100%;
       background: var(--bg);
@@ -2088,6 +2107,9 @@
 </head>
 <body>
 
+  <!-- ─── BG TOGGLE (for screenshots) ─────────────────────────── -->
+  <button id="bg-toggle" onclick="toggleOuterBg()" title="Toggle background">◑</button>
+
   <!-- ─── INTRO ANIMATION ─────────────────────────────────────── -->
   <div id="screen-intro" class="screen active">
     <div class="intro-aura"></div>
@@ -3857,6 +3879,11 @@
       const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
       document.getElementById('theme-toggle').classList.toggle('on', !isLight);
+    }
+
+    function toggleOuterBg() {
+      const isLight = document.body.getAttribute('data-outer') === 'light';
+      document.body.setAttribute('data-outer', isLight ? 'dark' : 'light');
     }
 
     // ─── PORTFOLIO DRAWER ─────────────────────────────────────
