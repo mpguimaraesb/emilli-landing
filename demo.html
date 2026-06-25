@@ -1967,6 +1967,21 @@
     .chart-period-gain.gain-pos { color: #6dc88a; }
     .chart-period-gain.gain-neg { color: #e07070; }
     .chart-wrap { position: relative; height: 108px; margin-top: 10px; }
+    .benchmark-row { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+    .bench-btn {
+      font-size: 10px; font-family: inherit; font-weight: 500;
+      padding: 3px 9px; border-radius: 20px; cursor: pointer;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); letter-spacing: 0.03em;
+      transition: all 0.15s;
+    }
+    .bench-btn:hover { color: var(--text); border-color: var(--muted); }
+    .bench-btn[id="bench-sp500"].active  { border-color: #5B8DD9; color: #5B8DD9; background: rgba(91,141,217,0.08); }
+    .bench-btn[id="bench-msci"].active   { border-color: #5AB87A; color: #5AB87A; background: rgba(90,184,122,0.08); }
+    .bench-btn[id="bench-nasdaq"].active { border-color: #9B6ED4; color: #9B6ED4; background: rgba(155,110,212,0.08); }
+    .benchmark-legend { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+    .bench-legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--muted); letter-spacing: 0.04em; }
+    .bench-dot { width: 20px; height: 1px; border-top: 2px dashed currentColor; display: inline-block; }
 
     /* ─── DONUT SECTION ─────────────────────────────────────── */
 
@@ -2981,8 +2996,16 @@
       sara: [[60,0.54],[48,0.63],[36,0.74],[24,0.84],[12,0.92],[0,1.00]],
     };
 
+    const INDEX_ANCHORS = {
+      sp500:  { label: 'S&P 500',    color: '#5B8DD9', anchors: [[60,0.54],[48,0.62],[36,0.74],[24,0.77],[12,0.81],[0,1.00]] },
+      msci:   { label: 'MSCI World', color: '#5AB87A', anchors: [[60,0.58],[48,0.65],[36,0.77],[24,0.82],[12,0.85],[0,1.00]] },
+      nasdaq: { label: 'Nasdaq-100', color: '#9B6ED4', anchors: [[60,0.37],[48,0.43],[36,0.64],[24,0.67],[12,0.78],[0,1.00]] },
+    };
+
     let lineChartInstance = null;
     let donutChartInstance = null;
+    let _activeBenchmarks = new Set();
+    let _chartYears = 5;
 
     function interpolateFraction(anchors, m) {
       for (let i = 0; i < anchors.length - 1; i++) {
@@ -3002,18 +3025,45 @@
       return pts;
     }
 
+    function generateBenchmarkData(key, portfolioAnchors, totalSEK, years) {
+      const idx = INDEX_ANCHORS[key];
+      if (!idx) return null;
+      const maxM = years * 12;
+      const portfolioStartF = interpolateFraction(portfolioAnchors, maxM);
+      const portfolioStartSEK = totalSEK * portfolioStartF;
+      const indexStartF = interpolateFraction(idx.anchors, maxM);
+      if (indexStartF <= 0) return null;
+      const pts = [];
+      for (let i = 0; i <= 52; i++) {
+        const m = maxM * (1 - i / 52);
+        pts.push(Math.round(portfolioStartSEK * interpolateFraction(idx.anchors, m) / indexStartF));
+      }
+      return pts;
+    }
+
     function initLineChart(persona, totalSEK, years) {
       if (lineChartInstance) { lineChartInstance.destroy(); lineChartInstance = null; }
       const canvas = document.getElementById('line-chart');
       if (!canvas || typeof Chart === 'undefined') return;
+      const portfolioAnchors = HISTORY_ANCHORS[persona] ?? HISTORY_ANCHORS.carl;
       const data = generateChartData(persona, totalSEK, years);
       const ctx = canvas.getContext('2d');
       const grad = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 108);
       grad.addColorStop(0, 'rgba(212,105,58,0.18)');
       grad.addColorStop(1, 'rgba(212,105,58,0)');
+
+      const datasets = [
+        { data, borderColor: '#D4693A', borderWidth: 1.5, backgroundColor: grad, fill: true, tension: 0.35, pointRadius: 0 }
+      ];
+      for (const key of _activeBenchmarks) {
+        const idx = INDEX_ANCHORS[key];
+        const bData = generateBenchmarkData(key, portfolioAnchors, totalSEK, years);
+        if (bData) datasets.push({ data: bData, borderColor: idx.color, borderWidth: 1.2, borderDash: [4,3], backgroundColor: 'transparent', fill: false, tension: 0.35, pointRadius: 0 });
+      }
+
       lineChartInstance = new Chart(ctx, {
         type: 'line',
-        data: { labels: data.map((_,i) => i), datasets: [{ data, borderColor: '#D4693A', borderWidth: 1.5, backgroundColor: grad, fill: true, tension: 0.35, pointRadius: 0 }] },
+        data: { labels: data.map((_,i) => i), datasets },
         options: {
           responsive: true, maintainAspectRatio: false, animation: false,
           plugins: { legend: { display: false }, tooltip: { enabled: false } },
@@ -3028,18 +3078,36 @@
           }
         }
       });
-      const anchors = HISTORY_ANCHORS[persona] ?? HISTORY_ANCHORS.carl;
-      const startF = interpolateFraction(anchors, years * 12);
+
+      const startF = interpolateFraction(portfolioAnchors, years * 12);
       const gainPct = startF > 0 ? ((1 - startF) / startF) * 100 : 0;
+      const periodLabel = years === 1 ? '1Y' : years === 3 ? '3Y' : '5Y';
       const label = document.getElementById('chart-gain-label');
       if (label) {
-        const periodLabel = years === 1 ? '1Y' : years === 3 ? '3Y' : '5Y';
         label.textContent = (gainPct >= 0 ? '+' : '') + gainPct.toFixed(1) + '% · ' + periodLabel;
         label.className = 'chart-period-gain ' + (gainPct >= 0 ? 'gain-pos' : 'gain-neg');
       }
+
+      // Update benchmark legend chips
+      for (const key of Object.keys(INDEX_ANCHORS)) {
+        const chip = document.getElementById('bench-legend-' + key);
+        if (chip) chip.style.display = _activeBenchmarks.has(key) ? 'flex' : 'none';
+      }
+    }
+
+    function toggleBenchmark(key, btn) {
+      if (_activeBenchmarks.has(key)) {
+        _activeBenchmarks.delete(key);
+        btn.classList.remove('active');
+      } else {
+        _activeBenchmarks.add(key);
+        btn.classList.add('active');
+      }
+      initLineChart(state.persona, state._summaryTotalSEK ?? 0, _chartYears);
     }
 
     function switchChartPeriod(years, btn) {
+      _chartYears = years;
       document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       initLineChart(state.persona, state._summaryTotalSEK ?? 0, years);
@@ -3147,6 +3215,16 @@
             <p class="chart-period-gain" id="chart-gain-label"></p>
           </div>
           <div class="chart-wrap"><canvas id="line-chart"></canvas></div>
+          <div class="benchmark-row">
+            <button class="bench-btn" id="bench-sp500"  onclick="toggleBenchmark('sp500',this)">S&amp;P 500</button>
+            <button class="bench-btn" id="bench-msci"   onclick="toggleBenchmark('msci',this)">MSCI World</button>
+            <button class="bench-btn" id="bench-nasdaq" onclick="toggleBenchmark('nasdaq',this)">Nasdaq-100</button>
+          </div>
+          <div class="benchmark-legend">
+            <div class="bench-legend-item" id="bench-legend-sp500"  style="display:none"><span class="bench-dot" style="background:#5B8DD9"></span>S&amp;P 500</div>
+            <div class="bench-legend-item" id="bench-legend-msci"   style="display:none"><span class="bench-dot" style="background:#5AB87A"></span>MSCI World</div>
+            <div class="bench-legend-item" id="bench-legend-nasdaq" style="display:none"><span class="bench-dot" style="background:#9B6ED4"></span>Nasdaq-100</div>
+          </div>
         </div>
 
         <p class="summary-section-label">Allocation</p>
@@ -3163,6 +3241,9 @@
       document.getElementById('emilli-opener').textContent = data.opener;
       const initial = (data.name ?? '?')[0].toUpperCase();
       document.getElementById('profile-btn').textContent = initial;
+
+      _activeBenchmarks = new Set();
+      _chartYears = 5;
 
       requestAnimationFrame(() => {
         initLineChart(state.persona, totalSEK, 5);
