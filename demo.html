@@ -1980,6 +1980,11 @@
 
     /* ─── ACCOUNT WRAP + EXPANDABLE POSITIONS ─────────────── */
 
+    .accounts-hint {
+      font-size: 9px; font-weight: 400; letter-spacing: 0.06em;
+      color: var(--dim); text-transform: none; margin-left: 6px;
+    }
+
     .account-wrap { margin-bottom: 8px; }
     .account-wrap .account-row { margin-bottom: 0; }
     .account-row.expandable { cursor: pointer; }
@@ -3149,7 +3154,7 @@
           <div class="donut-legend" id="donut-legend"></div>
         </div>
 
-        <p class="summary-section-label">Accounts</p>
+        <p class="summary-section-label">Accounts <span class="accounts-hint">tap to expand</span></p>
         ${resolvedAccounts.map(a => accountRowWithPositions(a, portfolioSummary)).join('')}
         ${propertySection}
       `;
@@ -3162,6 +3167,19 @@
         initLineChart(state.persona, totalSEK, 5);
         initDonutChart(resolvedAccounts);
       });
+
+      // Auto-expand the account with the fewest positions to hint the interaction
+      setTimeout(() => {
+        const expandables = [...document.querySelectorAll('.account-row.expandable')];
+        if (expandables.length) {
+          const sorted = expandables.sort((a, b) => {
+            const wA = document.getElementById(a.id.replace('-row', '-wrap'));
+            const wB = document.getElementById(b.id.replace('-row', '-wrap'));
+            return (wA?.children.length ?? 99) - (wB?.children.length ?? 99);
+          });
+          togglePositions(sorted[0].id.replace('-row', ''));
+        }
+      }, 1200);
 
       setTimeout(() => {
         document.getElementById('emilli-entry').classList.add('show');
