@@ -208,35 +208,6 @@
     }
 
     /* Tweak area */
-    .pc-tweak {
-      margin-top: 4px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .persona-card.selected .pc-tweak { display: flex; }
-
-    .tweak-label {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 400;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .tweak-val {
-      font-weight: 600;
-      color: var(--text);
-      font-size: 12px;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--amber);
-      cursor: pointer;
-    }
 
     .persona-cta {
       display: flex;
@@ -2155,14 +2126,6 @@
           <p class="pc-name">Sara, Stockholm</p>
         </div>
         <p class="pc-desc">Compliance rules make active investing nearly impossible. Salary accumulates in a current account. High earner, effectively uninvested.</p>
-        <div class="pc-tweak">
-          <div class="tweak-label">
-            <span>Cash sitting idle</span>
-            <span class="tweak-val" id="sara-val">SEK 520,000</span>
-          </div>
-          <input type="range" id="sara-range" min="1" max="10" value="5"
-            oninput="updateSaraVal(this.value)">
-        </div>
       </div>
 
       <!-- Erik -->
@@ -2172,14 +2135,6 @@
           <p class="pc-name">Erik, Göteborg</p>
         </div>
         <p class="pc-desc">Deliberately diversified — VWCE core since 2019, Nasdaq-100 tilt added in 2021. Bought Nvidia in 2024 as a deliberate AI bet. It worked. Now it's a third of the portfolio and he hasn't reviewed it.</p>
-        <div class="pc-tweak">
-          <div class="tweak-label">
-            <span>Number of institutions</span>
-            <span class="tweak-val" id="erik-val">3</span>
-          </div>
-          <input type="range" id="erik-range" min="2" max="4" value="3" step="1"
-            oninput="document.getElementById('erik-val').textContent = this.value">
-        </div>
       </div>
 
     </div>
@@ -2498,12 +2453,6 @@
 
     const MAX_MESSAGES = 15;
 
-    const saraCashValues = [100000, 150000, 200000, 280000, 360000, 520000, 620000, 720000, 800000];
-
-    function updateSaraVal(v) {
-      const val = saraCashValues[parseInt(v) - 1];
-      document.getElementById('sara-val').textContent = 'SEK ' + val.toLocaleString('sv-SE');
-    }
 
     // ─── STATE ────────────────────────────────────────────────
 
@@ -2749,8 +2698,8 @@
     };
 
     function getTweakValue() {
-      if (state.persona === 'sara') return saraCashValues[parseInt(document.getElementById('sara-range').value) - 1];
-      if (state.persona === 'erik') return parseInt(document.getElementById('erik-range').value);
+      if (state.persona === 'sara') return 520000;
+      if (state.persona === 'erik') return 3;
       return null;
     }
 
