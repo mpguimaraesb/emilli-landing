@@ -2168,13 +2168,79 @@
       border-style: dashed;
       border-top: none;
     }
-    .mandate-positions .pos-name { color: var(--muted); }
     .mandate-footer-note {
       font-size: 10px; font-weight: 300;
       color: var(--dim); line-height: 1.55;
       padding: 10px 14px 12px;
       border-top: 1px solid var(--border);
     }
+
+    /* Change type left-border on each position row */
+    .mandate-pos-row { padding-left: 14px !important; border-left: 3px solid transparent; margin: 0; }
+    .mandate-pos-row.chg-new      { border-left-color: var(--amber); }
+    .mandate-pos-row.chg-increase { border-left-color: #5a9e6f; }
+    .mandate-pos-row.chg-reduce   { border-left-color: rgba(180,90,90,0.55); }
+    .mandate-pos-row.chg-keep     { border-left-color: rgba(255,255,255,0.07); }
+    .mandate-pos-row .pos-name    { color: var(--text); }
+
+    /* Change badge inline with name */
+    .pos-chg-badge {
+      display: inline-flex; align-items: center;
+      font-size: 8px; font-weight: 600; letter-spacing: 0.06em;
+      padding: 1px 5px; border-radius: 3px;
+      margin-left: 6px; vertical-align: middle; line-height: 1.7;
+      text-transform: uppercase;
+    }
+    .pos-chg-badge.chg-new      { color: var(--amber); background: rgba(212,105,58,0.1); border: 1px solid rgba(212,105,58,0.22); }
+    .pos-chg-badge.chg-increase { color: #5a9e6f;      background: rgba(90,158,111,0.1);  border: 1px solid rgba(90,158,111,0.22); }
+    .pos-chg-badge.chg-reduce   { color: rgba(200,110,110,0.9); background: rgba(158,80,80,0.08); border: 1px solid rgba(158,80,80,0.18); }
+
+    /* Allocation stacked bar */
+    .mandate-alloc-bar {
+      display: flex; height: 6px; gap: 2px;
+      margin: 14px 14px 0; border-radius: 3px; overflow: hidden;
+    }
+    .mandate-alloc-seg { height: 100%; border-radius: 2px; }
+    .mandate-alloc-seg.chg-new      { background: var(--amber); }
+    .mandate-alloc-seg.chg-increase { background: #5a9e6f; }
+    .mandate-alloc-seg.chg-reduce   { background: rgba(212,105,58,0.3); }
+    .mandate-alloc-seg.chg-keep     { background: rgba(240,237,232,0.14); }
+
+    /* Changes summary row */
+    .mandate-changes-summary {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      padding: 8px 14px 10px; border-bottom: 1px solid var(--border);
+    }
+    .mandate-chg-stat {
+      font-size: 10px; font-weight: 400; color: var(--dim);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .mandate-chg-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .mandate-chg-stat.new .mandate-chg-dot      { background: var(--amber); }
+    .mandate-chg-stat.increase .mandate-chg-dot { background: #5a9e6f; }
+    .mandate-chg-stat.reduce .mandate-chg-dot   { background: rgba(200,110,110,0.8); }
+    .mandate-chg-stat.sell .mandate-chg-dot     { background: rgba(180,80,80,0.45); }
+
+    /* Exited / sold section */
+    .mandate-sold-section {
+      border-top: 1px solid var(--border);
+      padding: 10px 14px 6px;
+    }
+    .mandate-sold-label {
+      font-size: 9px; font-weight: 500; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 6px;
+    }
+    .mandate-sold-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 0;
+    }
+    .mandate-sold-name {
+      font-size: 12px; font-weight: 300; color: var(--dim);
+      text-decoration: line-through; text-decoration-color: rgba(158,80,80,0.4);
+    }
+    .mandate-sold-pct { font-size: 10px; font-weight: 300; color: rgba(180,100,100,0.55); }
     @keyframes mandatePulse {
       0%, 100% { border-color: rgba(212,105,58,0.3); }
       50%       { border-color: rgba(212,105,58,0.85); box-shadow: 0 0 0 2px rgba(212,105,58,0.12); }
@@ -2771,14 +2837,24 @@
           sub: 'Global core added · Swedish positions capped at 8%',
           staticSEK: 230000,
           positions: [
-            { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.42, currentValueSEK: 96600 },
-            { name: 'Short-term Bond ETF',          weight: 0.20, currentValueSEK: 46000 },
-            { name: 'Atlas Copco B',                weight: 0.08, currentValueSEK: 18400 },
-            { name: 'Volvo B',                      weight: 0.06, currentValueSEK: 13800 },
-            { name: 'Sandvik',                      weight: 0.05, currentValueSEK: 11500 },
-            { name: 'Emerging Markets ETF (VFEM)',  weight: 0.08, currentValueSEK: 18400 },
-            { name: 'Cash (buffer)',                weight: 0.11, currentValueSEK: 25300 },
+            { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.42, currentValueSEK: 96600,  change: 'new' },
+            { name: 'Emerging Markets ETF (VFEM)',  weight: 0.08, currentValueSEK: 18400,  change: 'new' },
+            { name: 'Short-term Bond ETF',          weight: 0.20, currentValueSEK: 46000,  change: 'new' },
+            { name: 'Atlas Copco B',                weight: 0.08, currentValueSEK: 18400,  change: 'reduce', prevWeight: 0.15 },
+            { name: 'Volvo B',                      weight: 0.06, currentValueSEK: 13800,  change: 'reduce', prevWeight: 0.10 },
+            { name: 'Sandvik',                      weight: 0.05, currentValueSEK: 11500,  change: 'reduce', prevWeight: 0.09 },
+            { name: 'Cash (buffer)',                weight: 0.11, currentValueSEK: 25300,  change: 'new' },
           ],
+          sold: [
+            { name: 'SSAB A',                    prevWeight: 0.09 },
+            { name: 'Alfa Laval',                prevWeight: 0.08 },
+            { name: 'SKF B',                     prevWeight: 0.07 },
+            { name: 'Hexagon B',                 prevWeight: 0.06 },
+            { name: 'ABB Ltd',                   prevWeight: 0.05 },
+            { name: 'SPP Global Solutions',      prevWeight: 0.10 },
+            { name: 'Länsförsäkringar Global',   prevWeight: 0.07 },
+          ],
+          soldLabel: 'Exited',
         },
         opener: 'Your top three positions are all Swedish industrials. That\'s not just company concentration — it\'s sector and geography stacked. Was that a deliberate thesis?',
         connections: [
@@ -2806,11 +2882,17 @@
             sub: 'Idle cash deployed · Compliance-safe discretionary',
             staticSEK: mandateTotal,
             positions: [
-              { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.55, currentValueSEK: Math.round(mandateTotal * 0.55) },
-              { name: 'Short-term Bond ETF',          weight: 0.25, currentValueSEK: Math.round(mandateTotal * 0.25) },
-              { name: 'Emerging Markets ETF (VFEM)',  weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10) },
-              { name: 'Cash (buffer)',                weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10) },
+              { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.55, currentValueSEK: Math.round(mandateTotal * 0.55), change: 'new' },
+              { name: 'Short-term Bond ETF',          weight: 0.25, currentValueSEK: Math.round(mandateTotal * 0.25), change: 'new' },
+              { name: 'Emerging Markets ETF (VFEM)',  weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'new' },
+              { name: 'Cash (buffer)',                weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'new' },
             ],
+            sold: [
+              { name: 'SEB current account (idle)', prevWeight: Math.round(idleCash / mandateTotal * 100) / 100 },
+              { name: 'Swedbank savings (idle)',     prevWeight: 0.12 },
+              { name: '4 Avanza positions',         prevWeight: 0.05 },
+            ],
+            soldLabel: 'Redeployed',
           },
           opener: `You have SEK ${totalCashStr} sitting across two cash accounts earning near zero. Is that a deliberate choice?`,
           connections: [
@@ -2843,13 +2925,17 @@
             sub: 'Nvidia capped at 10% · Tech tilt preserved · Bonds added',
             staticSEK: mandateTotal,
             positions: [
-              { name: 'VWCE (global core)',    weight: 0.42, currentValueSEK: Math.round(mandateTotal * 0.42) },
-              { name: 'EQQQ (Nasdaq-100)',     weight: 0.23, currentValueSEK: Math.round(mandateTotal * 0.23) },
-              { name: 'Nvidia (NVDA)',         weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10) },
-              { name: 'Global Bond ETF',       weight: 0.13, currentValueSEK: Math.round(mandateTotal * 0.13) },
-              { name: 'ASML Holding',          weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06) },
-              { name: 'Cash (buffer)',         weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06) },
+              { name: 'VWCE (global core)', weight: 0.42, currentValueSEK: Math.round(mandateTotal * 0.42), change: 'increase', prevWeight: 0.14 },
+              { name: 'EQQQ (Nasdaq-100)',  weight: 0.23, currentValueSEK: Math.round(mandateTotal * 0.23), change: 'reduce',   prevWeight: 0.31 },
+              { name: 'Nvidia (NVDA)',      weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'reduce',   prevWeight: 0.18 },
+              { name: 'Global Bond ETF',   weight: 0.13, currentValueSEK: Math.round(mandateTotal * 0.13), change: 'new' },
+              { name: 'ASML Holding',      weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06), change: 'keep' },
+              { name: 'Cash (buffer)',     weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06), change: 'new' },
             ],
+            sold: [
+              { name: 'SEB savings (deployed)', prevWeight: 0.32 },
+            ],
+            soldLabel: 'Deployed',
           },
           opener: `You have a solid global core — but Nvidia shows up three times in this picture: directly in your Avanza, inside the Nasdaq-100 ETF, and inside VWCE. Your effective exposure to a single name is higher than what your spreadsheet shows. Did you ever calculate it that way?`,
           connections: [
@@ -3298,9 +3384,62 @@
       </div>`;
     }
 
+    function mandatePositionRowHtml(pos) {
+      const valStr = 'SEK ' + fmtSEK(pos.currentValueSEK ?? 0);
+      const wt = Math.round((pos.weight ?? 0) * 100);
+      const prevWt = pos.prevWeight != null ? Math.round(pos.prevWeight * 100) : null;
+      const chg = pos.change ?? 'keep';
+      const badgeLabel = { new: 'new', increase: '↑', reduce: '↓' }[chg];
+      const badge = badgeLabel
+        ? `<span class="pos-chg-badge chg-${chg}">${badgeLabel}</span>` : '';
+      const weightText = prevWt != null && chg !== 'keep'
+        ? `${prevWt}% → ${wt}% of account`
+        : `${wt}% of account`;
+      return `<div class="position-row mandate-pos-row chg-${chg}">
+        <div class="pos-left">
+          <div class="pos-name">${escapeHtml(pos.name)}${badge}</div>
+          <div class="pos-weight">${weightText}</div>
+        </div>
+        <div class="pos-right"><div class="pos-value">${valStr}</div></div>
+      </div>`;
+    }
+
     function mandateAccountRowHtml(m) {
       const amountStr = fmtSEK(m.staticSEK ?? 0);
       const uid = 'ac-mandate';
+      const positions = m.positions ?? [];
+      const sold = m.sold ?? [];
+
+      const newCount      = positions.filter(p => p.change === 'new').length;
+      const increaseCount = positions.filter(p => p.change === 'increase').length;
+      const reduceCount   = positions.filter(p => p.change === 'reduce').length;
+      const soldCount     = sold.length;
+
+      const allocBar = positions.map(p => {
+        const chg = p.change ?? 'keep';
+        const flex = Math.round((p.weight ?? 0) * 100);
+        return `<div class="mandate-alloc-seg chg-${chg}" style="flex:${flex}"></div>`;
+      }).join('');
+
+      const stats = [
+        newCount > 0      ? `<div class="mandate-chg-stat new"><div class="mandate-chg-dot"></div>${newCount} new</div>` : '',
+        increaseCount > 0 ? `<div class="mandate-chg-stat increase"><div class="mandate-chg-dot"></div>${increaseCount} increased</div>` : '',
+        reduceCount > 0   ? `<div class="mandate-chg-stat reduce"><div class="mandate-chg-dot"></div>${reduceCount} trimmed</div>` : '',
+        soldCount > 0     ? `<div class="mandate-chg-stat sell"><div class="mandate-chg-dot"></div>${soldCount} ${m.soldLabel ?? 'exited'}</div>` : '',
+      ].filter(Boolean).join('');
+
+      const soldSection = sold.length ? `
+        <div class="mandate-sold-section">
+          <div class="mandate-sold-label">${escapeHtml(m.soldLabel ?? 'Exited')}</div>
+          ${sold.map(s => {
+            const pct = s.prevWeight != null ? Math.round(s.prevWeight * 100) : null;
+            return `<div class="mandate-sold-row">
+              <span class="mandate-sold-name">${escapeHtml(s.name)}</span>
+              ${pct != null ? `<span class="mandate-sold-pct">was ${pct}%</span>` : ''}
+            </div>`;
+          }).join('')}
+        </div>` : '';
+
       return `<div class="account-wrap">
         <div class="account-row mandate-row expandable" id="${uid}-row" onclick="togglePositions('${uid}')">
           <div class="ac-icon" style="background:${m.color}">${m.icon}</div>
@@ -3311,7 +3450,10 @@
           <div><div class="ac-amount" style="color:var(--amber);opacity:0.8">${amountStr}</div><span class="ac-currency">${m.currency}</span></div>
         </div>
         <div class="positions-wrap mandate-positions" id="${uid}-wrap">
-          ${(m.positions ?? []).map(positionRowHtml).join('')}
+          <div class="mandate-alloc-bar">${allocBar}</div>
+          <div class="mandate-changes-summary">${stats}</div>
+          ${positions.map(mandatePositionRowHtml).join('')}
+          ${soldSection}
           <div class="mandate-footer-note">Proposed structure — not yet active. emilli handles execution once approved.</div>
         </div>
       </div>`;
