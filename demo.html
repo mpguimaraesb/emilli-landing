@@ -2175,6 +2175,26 @@
       border-top: 1px solid var(--border);
     }
 
+    /* Asset class distribution */
+    .mandate-asset-section {
+      padding: 12px 14px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mandate-section-label {
+      font-size: 9px; font-weight: 500; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 8px;
+    }
+    .mandate-asset-bar {
+      display: flex; height: 8px; gap: 2px;
+      border-radius: 4px; overflow: hidden; margin-bottom: 10px;
+    }
+    .mandate-asset-seg { height: 100%; border-radius: 2px; }
+    .mandate-asset-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .mandate-asset-item { display: flex; align-items: center; gap: 5px; }
+    .mandate-asset-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .mandate-asset-name { font-size: 10px; font-weight: 300; color: var(--muted); }
+    .mandate-asset-pct  { font-size: 10px; font-weight: 500; color: var(--text); margin-left: 2px; }
+
     /* Change type left-border on each position row */
     .mandate-pos-row { padding-left: 14px !important; border-left: 3px solid transparent; margin: 0; }
     .mandate-pos-row.chg-new      { border-left-color: var(--amber); }
@@ -2837,13 +2857,13 @@
           sub: 'Global core added · Swedish positions capped at 8%',
           staticSEK: 230000,
           positions: [
-            { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.42, currentValueSEK: 96600,  change: 'new' },
-            { name: 'Emerging Markets ETF (VFEM)',  weight: 0.08, currentValueSEK: 18400,  change: 'new' },
-            { name: 'Short-term Bond ETF',          weight: 0.20, currentValueSEK: 46000,  change: 'new' },
-            { name: 'Atlas Copco B',                weight: 0.08, currentValueSEK: 18400,  change: 'reduce', prevWeight: 0.15 },
-            { name: 'Volvo B',                      weight: 0.06, currentValueSEK: 13800,  change: 'reduce', prevWeight: 0.10 },
-            { name: 'Sandvik',                      weight: 0.05, currentValueSEK: 11500,  change: 'reduce', prevWeight: 0.09 },
-            { name: 'Cash (buffer)',                weight: 0.11, currentValueSEK: 25300,  change: 'new' },
+            { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.42, currentValueSEK: 96600,  change: 'new',    assetClass: 'global-eq' },
+            { name: 'Emerging Markets ETF (VFEM)',  weight: 0.08, currentValueSEK: 18400,  change: 'new',    assetClass: 'em-eq' },
+            { name: 'Short-term Bond ETF',          weight: 0.20, currentValueSEK: 46000,  change: 'new',    assetClass: 'fixed-income' },
+            { name: 'Atlas Copco B',                weight: 0.08, currentValueSEK: 18400,  change: 'reduce', prevWeight: 0.15, assetClass: 'domestic-eq' },
+            { name: 'Volvo B',                      weight: 0.06, currentValueSEK: 13800,  change: 'reduce', prevWeight: 0.10, assetClass: 'domestic-eq' },
+            { name: 'Sandvik',                      weight: 0.05, currentValueSEK: 11500,  change: 'reduce', prevWeight: 0.09, assetClass: 'domestic-eq' },
+            { name: 'Cash (buffer)',                weight: 0.11, currentValueSEK: 25300,  change: 'new',    assetClass: 'cash' },
           ],
           sold: [
             { name: 'SSAB A',                    prevWeight: 0.09 },
@@ -2882,10 +2902,10 @@
             sub: 'Idle cash deployed · Compliance-safe discretionary',
             staticSEK: mandateTotal,
             positions: [
-              { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.55, currentValueSEK: Math.round(mandateTotal * 0.55), change: 'new' },
-              { name: 'Short-term Bond ETF',          weight: 0.25, currentValueSEK: Math.round(mandateTotal * 0.25), change: 'new' },
-              { name: 'Emerging Markets ETF (VFEM)',  weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'new' },
-              { name: 'Cash (buffer)',                weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'new' },
+              { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.55, currentValueSEK: Math.round(mandateTotal * 0.55), change: 'new', assetClass: 'global-eq' },
+              { name: 'Short-term Bond ETF',          weight: 0.25, currentValueSEK: Math.round(mandateTotal * 0.25), change: 'new', assetClass: 'fixed-income' },
+              { name: 'Emerging Markets ETF (VFEM)',  weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'new', assetClass: 'em-eq' },
+              { name: 'Cash (buffer)',                weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'new', assetClass: 'cash' },
             ],
             sold: [
               { name: 'SEB current account (idle)', prevWeight: Math.round(idleCash / mandateTotal * 100) / 100 },
@@ -2925,12 +2945,12 @@
             sub: 'Nvidia capped at 10% · Tech tilt preserved · Bonds added',
             staticSEK: mandateTotal,
             positions: [
-              { name: 'VWCE (global core)', weight: 0.42, currentValueSEK: Math.round(mandateTotal * 0.42), change: 'increase', prevWeight: 0.14 },
-              { name: 'EQQQ (Nasdaq-100)',  weight: 0.23, currentValueSEK: Math.round(mandateTotal * 0.23), change: 'reduce',   prevWeight: 0.31 },
-              { name: 'Nvidia (NVDA)',      weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'reduce',   prevWeight: 0.18 },
-              { name: 'Global Bond ETF',   weight: 0.13, currentValueSEK: Math.round(mandateTotal * 0.13), change: 'new' },
-              { name: 'ASML Holding',      weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06), change: 'keep' },
-              { name: 'Cash (buffer)',     weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06), change: 'new' },
+              { name: 'VWCE (global core)', weight: 0.42, currentValueSEK: Math.round(mandateTotal * 0.42), change: 'increase', prevWeight: 0.14, assetClass: 'global-eq' },
+              { name: 'EQQQ (Nasdaq-100)',  weight: 0.23, currentValueSEK: Math.round(mandateTotal * 0.23), change: 'reduce',   prevWeight: 0.31, assetClass: 'global-eq' },
+              { name: 'Nvidia (NVDA)',      weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10), change: 'reduce',   prevWeight: 0.18, assetClass: 'global-eq' },
+              { name: 'Global Bond ETF',   weight: 0.13, currentValueSEK: Math.round(mandateTotal * 0.13), change: 'new',                        assetClass: 'fixed-income' },
+              { name: 'ASML Holding',      weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06), change: 'keep',                        assetClass: 'global-eq' },
+              { name: 'Cash (buffer)',     weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06), change: 'new',                         assetClass: 'cash' },
             ],
             sold: [
               { name: 'SEB savings (deployed)', prevWeight: 0.32 },
@@ -3384,6 +3404,46 @@
       </div>`;
     }
 
+    const ASSET_CLASS_META = {
+      'global-eq':    { label: 'Global equities',    color: '#D4693A' },
+      'domestic-eq':  { label: 'Domestic equities',  color: '#8B4A1E' },
+      'em-eq':        { label: 'Emerging markets',   color: '#C48A2A' },
+      'fixed-income': { label: 'Fixed income',       color: '#4A7A8A' },
+      'cash':         { label: 'Cash',               color: 'rgba(240,237,232,0.22)' },
+    };
+    const ASSET_CLASS_ORDER = ['global-eq','domestic-eq','em-eq','fixed-income','cash'];
+
+    function mandateAssetClassHtml(positions) {
+      const totals = {};
+      for (const p of positions) {
+        const cls = p.assetClass ?? 'global-eq';
+        totals[cls] = (totals[cls] ?? 0) + (p.weight ?? 0);
+      }
+      const entries = ASSET_CLASS_ORDER
+        .filter(cls => totals[cls] > 0)
+        .map(cls => [cls, totals[cls]]);
+
+      const bar = entries.map(([cls, w]) => {
+        const { color } = ASSET_CLASS_META[cls];
+        return `<div class="mandate-asset-seg" style="flex:${Math.round(w*100)};background:${color}"></div>`;
+      }).join('');
+
+      const legend = entries.map(([cls, w]) => {
+        const { label, color } = ASSET_CLASS_META[cls];
+        return `<div class="mandate-asset-item">
+          <div class="mandate-asset-dot" style="background:${color}"></div>
+          <span class="mandate-asset-name">${label}</span>
+          <span class="mandate-asset-pct">${Math.round(w*100)}%</span>
+        </div>`;
+      }).join('');
+
+      return `<div class="mandate-asset-section">
+        <div class="mandate-section-label">Asset class</div>
+        <div class="mandate-asset-bar">${bar}</div>
+        <div class="mandate-asset-legend">${legend}</div>
+      </div>`;
+    }
+
     function mandatePositionRowHtml(pos) {
       const valStr = 'SEK ' + fmtSEK(pos.currentValueSEK ?? 0);
       const wt = Math.round((pos.weight ?? 0) * 100);
@@ -3415,11 +3475,7 @@
       const reduceCount   = positions.filter(p => p.change === 'reduce').length;
       const soldCount     = sold.length;
 
-      const allocBar = positions.map(p => {
-        const chg = p.change ?? 'keep';
-        const flex = Math.round((p.weight ?? 0) * 100);
-        return `<div class="mandate-alloc-seg chg-${chg}" style="flex:${flex}"></div>`;
-      }).join('');
+      const assetClassSection = mandateAssetClassHtml(positions);
 
       const stats = [
         newCount > 0      ? `<div class="mandate-chg-stat new"><div class="mandate-chg-dot"></div>${newCount} new</div>` : '',
@@ -3450,7 +3506,7 @@
           <div><div class="ac-amount" style="color:var(--amber);opacity:0.8">${amountStr}</div><span class="ac-currency">${m.currency}</span></div>
         </div>
         <div class="positions-wrap mandate-positions" id="${uid}-wrap">
-          <div class="mandate-alloc-bar">${allocBar}</div>
+          ${assetClassSection}
           <div class="mandate-changes-summary">${stats}</div>
           ${positions.map(mandatePositionRowHtml).join('')}
           ${soldSection}
