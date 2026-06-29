@@ -2103,6 +2103,44 @@
       padding: 8px;
     }
     .intro-skip-btn:hover { color: rgba(240,237,232,0.45); }
+
+    /* ─── MANDATE PREVIEW ACCOUNT ───────────────────────────── */
+    .account-row.mandate-row {
+      border-color: rgba(212,105,58,0.3);
+      border-style: dashed;
+      cursor: pointer;
+    }
+    .account-row.mandate-row .ac-name { color: var(--amber); }
+    .mandate-tag {
+      display: inline-block;
+      font-size: 8px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--amber); opacity: 0.85;
+      background: var(--amber-soft);
+      border: 1px solid rgba(212,105,58,0.25);
+      border-radius: 4px;
+      padding: 1px 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+      line-height: 1.7;
+    }
+    .positions-wrap.mandate-positions {
+      border-color: rgba(212,105,58,0.2);
+      border-style: dashed;
+      border-top: none;
+    }
+    .mandate-positions .pos-name { color: var(--muted); }
+    .mandate-footer-note {
+      font-size: 10px; font-weight: 300;
+      color: var(--dim); line-height: 1.55;
+      padding: 10px 14px 12px;
+      border-top: 1px solid var(--border);
+    }
+    @keyframes mandatePulse {
+      0%, 100% { border-color: rgba(212,105,58,0.3); }
+      50%       { border-color: rgba(212,105,58,0.85); box-shadow: 0 0 0 2px rgba(212,105,58,0.12); }
+    }
+    .mandate-row.highlight { animation: mandatePulse 0.9s ease 2; }
   </style>
 </head>
 <body>
@@ -2684,6 +2722,20 @@
           { icon: 'A', color: '#2c6e2c', name: 'Avanza', sub: '2 index funds · Untouched since 2022', currency: 'SEK', portfolioId: 'avanza', staticSEK: 43000 },
         ],
         property: null,
+        mandatePreview: {
+          icon: 'e', color: '#7A1F1F', name: 'emilli managed', currency: 'SEK',
+          sub: 'Global core added · Swedish positions capped at 8%',
+          staticSEK: 230000,
+          positions: [
+            { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.42, currentValueSEK: 96600 },
+            { name: 'Short-term Bond ETF',          weight: 0.20, currentValueSEK: 46000 },
+            { name: 'Atlas Copco B',                weight: 0.08, currentValueSEK: 18400 },
+            { name: 'Volvo B',                      weight: 0.06, currentValueSEK: 13800 },
+            { name: 'Sandvik',                      weight: 0.05, currentValueSEK: 11500 },
+            { name: 'Emerging Markets ETF (VFEM)',  weight: 0.08, currentValueSEK: 18400 },
+            { name: 'Cash (buffer)',                weight: 0.11, currentValueSEK: 25300 },
+          ],
+        },
         opener: 'Your top three positions are all Swedish industrials. That\'s not just company concentration — it\'s sector and geography stacked. Was that a deliberate thesis?',
         connections: [
           { icon: 'N', color: '#1a3a6c', name: 'Nordnet', type: 'ISK account' },
@@ -2692,6 +2744,7 @@
       }),
       sara: (idleCash) => {
         const totalCashStr = (idleCash + 78000).toLocaleString('sv-SE');
+        const mandateTotal = idleCash + 78000 + 31000;
         return {
           name: 'Sara',
           greeting: 'Good morning,',
@@ -2704,6 +2757,17 @@
           property: [
             { icon: 'H', color: '#5c3d1e', name: 'Apartment, Stockholm', sub: 'Mortgage SEK 2,900,000 · Equity SEK 1,900,000', currency: 'SEK', staticSEK: 4800000 },
           ],
+          mandatePreview: {
+            icon: 'e', color: '#7A1F1F', name: 'emilli managed', currency: 'SEK',
+            sub: 'Idle cash deployed · Compliance-safe discretionary',
+            staticSEK: mandateTotal,
+            positions: [
+              { name: 'MSCI World UCITS ETF (SWRD)', weight: 0.55, currentValueSEK: Math.round(mandateTotal * 0.55) },
+              { name: 'Short-term Bond ETF',          weight: 0.25, currentValueSEK: Math.round(mandateTotal * 0.25) },
+              { name: 'Emerging Markets ETF (VFEM)',  weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10) },
+              { name: 'Cash (buffer)',                weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10) },
+            ],
+          },
           opener: `You have SEK ${totalCashStr} sitting across two cash accounts earning near zero. Is that a deliberate choice?`,
           connections: [
             { icon: 'S', color: '#003087', name: 'SEB', type: 'Current + mortgage' },
@@ -2716,6 +2780,8 @@
         const extraAccounts = [];
         if (numBanks >= 3) extraAccounts.push({ icon: 'NB', color: '#003087', name: 'Nordea', sub: 'Old account · Never closed', currency: 'SEK', staticSEK: 44000 });
         if (numBanks >= 4) extraAccounts.push({ icon: 'HB', color: '#00205b', name: 'Handelsbanken', sub: 'Forgotten joint account', currency: 'SEK', staticSEK: 12000 });
+        const extraSEK = (numBanks >= 3 ? 44000 : 0) + (numBanks >= 4 ? 12000 : 0);
+        const mandateTotal = 550000 + extraSEK;
         return {
           name: 'Erik',
           greeting: 'Good morning,',
@@ -2728,6 +2794,19 @@
           property: [
             { icon: 'H', color: '#5c3d1e', name: 'Apartment, Göteborg', sub: 'Fully paid · Equity SEK 4,200,000', currency: 'SEK', staticSEK: 4200000 },
           ],
+          mandatePreview: {
+            icon: 'e', color: '#7A1F1F', name: 'emilli managed', currency: 'SEK',
+            sub: 'Nvidia capped at 10% · Tech tilt preserved · Bonds added',
+            staticSEK: mandateTotal,
+            positions: [
+              { name: 'VWCE (global core)',    weight: 0.42, currentValueSEK: Math.round(mandateTotal * 0.42) },
+              { name: 'EQQQ (Nasdaq-100)',     weight: 0.23, currentValueSEK: Math.round(mandateTotal * 0.23) },
+              { name: 'Nvidia (NVDA)',         weight: 0.10, currentValueSEK: Math.round(mandateTotal * 0.10) },
+              { name: 'Global Bond ETF',       weight: 0.13, currentValueSEK: Math.round(mandateTotal * 0.13) },
+              { name: 'ASML Holding',          weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06) },
+              { name: 'Cash (buffer)',         weight: 0.06, currentValueSEK: Math.round(mandateTotal * 0.06) },
+            ],
+          },
           opener: `You have a solid global core — but Nvidia shows up three times in this picture: directly in your Avanza, inside the Nasdaq-100 ETF, and inside VWCE. Your effective exposure to a single name is higher than what your spreadsheet shows. Did you ever calculate it that way?`,
           connections: [
             { icon: 'S', color: '#003087', name: 'SEB', type: 'Savings account' },
@@ -3175,6 +3254,25 @@
       </div>`;
     }
 
+    function mandateAccountRowHtml(m) {
+      const amountStr = fmtSEK(m.staticSEK ?? 0);
+      const uid = 'ac-mandate';
+      return `<div class="account-wrap">
+        <div class="account-row mandate-row expandable" id="${uid}-row" onclick="togglePositions('${uid}')">
+          <div class="ac-icon" style="background:${m.color}">${m.icon}</div>
+          <div class="ac-info">
+            <div class="ac-name">${m.name}<span class="mandate-tag">preview</span><span class="ac-chevron">▾</span></div>
+            <div class="ac-sub">${m.sub}</div>
+          </div>
+          <div><div class="ac-amount" style="color:var(--amber);opacity:0.8">${amountStr}</div><span class="ac-currency">${m.currency}</span></div>
+        </div>
+        <div class="positions-wrap mandate-positions" id="${uid}-wrap">
+          ${(m.positions ?? []).map(positionRowHtml).join('')}
+          <div class="mandate-footer-note">Proposed structure — not yet active. emilli handles execution once approved.</div>
+        </div>
+      </div>`;
+    }
+
     function accountRowWithPositions(a, portfolioSummary) {
       const amountStr = fmtSEK(a.resolvedSEK ?? a.staticSEK ?? 0);
       const entry = portfolioSummary && a.portfolioId ? portfolioSummary.find(s => s.id === a.portfolioId) : null;
@@ -3258,6 +3356,10 @@
         <p class="summary-section-label">Accounts <span class="accounts-hint">tap to expand</span></p>
         ${resolvedAccounts.map(a => accountRowWithPositions(a, portfolioSummary)).join('')}
         ${propertySection}
+        ${data.mandatePreview ? `
+        <p class="summary-section-label" style="margin-top:20px">Proposed</p>
+        ${mandateAccountRowHtml(data.mandatePreview)}
+        ` : ''}
       `;
 
       document.getElementById('emilli-opener').textContent = data.opener;
@@ -3651,6 +3753,10 @@
         'advisor', 'professional', 'someone to help', 'manage this',
         "can't manage", "don't have time", 'no time', 'dont have time',
         'dont have the time', 'no time for', 'time for it',
+        "don't have much time", 'dont have much time',
+        "haven't had time", 'havent had time', 'not had time',
+        "haven't thought", 'havent thought', "haven't decided",
+        "haven't been", 'havent been', 'not been following',
         'manage it', 'manage for me', 'someone to manage',
         'want someone', 'hire someone', 'hand it over', 'hand this over',
         'take over', 'too busy', 'maintain it', 'maintain this',
@@ -3682,7 +3788,7 @@
       }
 
       const shouldTriggerMandate = !state.mandateShown && (
-        (state.userTurns >= 8) ||
+        (state.userTurns >= 6) ||
         (state.userTurns >= 2 && mandateSignalDetected(text))
       );
 
@@ -3932,6 +4038,25 @@
 
       let html = '';
 
+      // ── Actions ──
+      html += `<div class="drawer-section-label">Actions</div>`;
+      html += `<div class="drawer-actions">
+        <button class="drawer-action-btn" onclick="closeDrawer(); showSummary();">
+          <div class="drawer-action-icon">↗</div>
+          View full summary
+        </button>
+        <button class="drawer-action-btn" onclick="showProposedPortfolio()">
+          <div class="drawer-action-icon" style="background:rgba(212,105,58,0.12);border-color:rgba(212,105,58,0.25);color:var(--amber)">e</div>
+          View proposed portfolio
+        </button>
+        <button class="drawer-action-btn" onclick="showSnackbar('Voice coming soon — stay tuned.')">
+          <div class="drawer-action-icon">🎙</div>
+          Talk to emilli
+        </button>
+      </div>`;
+
+      html += `<div class="drawer-divider"></div>`;
+
       // ── Portfolio section ──
       html += `<div class="drawer-section-label">Portfolio</div>`;
 
@@ -3977,22 +4102,21 @@
         </div>`;
       }
 
-      html += `<div class="drawer-divider"></div>`;
-
-      // ── Actions ──
-      html += `<div class="drawer-section-label">Actions</div>`;
-      html += `<div class="drawer-actions">
-        <button class="drawer-action-btn" onclick="closeDrawer(); showSummary();">
-          <div class="drawer-action-icon">↗</div>
-          View full summary
-        </button>
-        <button class="drawer-action-btn" onclick="showSnackbar('Voice coming soon — stay tuned.')">
-          <div class="drawer-action-icon">🎙</div>
-          Talk to emilli
-        </button>
-      </div>`;
-
       body.innerHTML = html;
+    }
+
+    function showProposedPortfolio() {
+      closeDrawer();
+      showSummary();
+      setTimeout(() => {
+        const row = document.getElementById('ac-mandate-row');
+        if (!row) return;
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const wrap = document.getElementById('ac-mandate-wrap');
+        if (wrap && !wrap.classList.contains('open')) togglePositions('ac-mandate');
+        row.classList.add('highlight');
+        setTimeout(() => row.classList.remove('highlight'), 2000);
+      }, 350);
     }
 
     // ─── MANDATE ──────────────────────────────────────────────
