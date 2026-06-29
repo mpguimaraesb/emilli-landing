@@ -521,7 +521,7 @@
     .summary-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 20px 100px;
+      padding: 8px 20px 200px;
       scrollbar-width: none;
     }
     .summary-scroll::-webkit-scrollbar { display: none; }
@@ -691,6 +691,45 @@
       line-height: 1;
     }
     .emilli-bubble.expanded .eb-chevron { transform: rotate(180deg); }
+
+    .eb-dismiss {
+      background: none; border: none;
+      color: var(--dim); font-size: 15px;
+      cursor: pointer; padding: 0 0 0 6px;
+      line-height: 1; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .eb-dismiss:hover { color: var(--muted); }
+
+    .emilli-restore-chip {
+      position: absolute;
+      bottom: 14px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 7px 14px;
+      font-size: 11px; font-weight: 400;
+      color: var(--amber);
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 5;
+      white-space: nowrap;
+    }
+    .emilli-restore-chip.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    .emilli-restore-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 8px rgba(212,105,58,0.6);
+      flex-shrink: 0;
+    }
 
     .eb-text-wrap {
       padding: 8px 14px 0;
@@ -2373,6 +2412,7 @@
                 <div class="eb-aura"></div>
                 <span class="eb-name">emilli.</span>
                 <span class="eb-chevron">▾</span>
+                <button class="eb-dismiss" onclick="event.stopPropagation(); dismissInsight()" aria-label="Dismiss">×</button>
               </div>
               <div class="eb-text-wrap" onclick="toggleInsight()">
                 <p class="eb-text" id="emilli-opener"></p>
@@ -2382,6 +2422,10 @@
                 <div class="eb-reply-arrow">↑</div>
               </div>
             </div>
+          </div>
+          <div class="emilli-restore-chip" id="emilli-restore-chip" onclick="restoreInsight()">
+            <div class="emilli-restore-dot"></div>
+            emilli.
           </div>
         </div>
 
@@ -3388,12 +3432,23 @@
       }, 1200);
 
       setTimeout(() => {
+        document.getElementById('emilli-restore-chip').classList.remove('show');
         document.getElementById('emilli-entry').classList.add('show');
       }, 3500);
     }
 
     function toggleInsight() {
       document.getElementById('emilli-bubble').classList.toggle('expanded');
+    }
+
+    function dismissInsight() {
+      document.getElementById('emilli-entry').classList.remove('show');
+      document.getElementById('emilli-restore-chip').classList.add('show');
+    }
+
+    function restoreInsight() {
+      document.getElementById('emilli-restore-chip').classList.remove('show');
+      document.getElementById('emilli-entry').classList.add('show');
     }
 
     function showSummary() {
