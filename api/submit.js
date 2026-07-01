@@ -3,7 +3,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email } = req.body;
+  const { email, name, source } = req.body;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email' });
@@ -33,6 +33,40 @@ module.exports = async function handler(req, res) {
     const err = await response.json().catch(() => ({}));
     console.error('Attio error:', err);
     return res.status(500).json({ error: 'Failed to save' });
+  }
+
+  const record = await response.json().catch(() => ({}));
+  const recordId = record?.data?.id?.record_id;
+
+  // Log the interaction as a note rather than a custom attribute, so repeat
+  // touches (mandate today, general interest tomorrow) build a history
+  // instead of overwriting a single field. Failure here shouldn't fail the
+  // request — the person record itself already saved above.
+  if (recordId && source) {
+    try {
+      const noteRes = await fetch('https://api.attio.com/v2/notes', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.ATTIO_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {
+            format: 'plaintext',
+            parent_object: 'people',
+            parent_record_id: recordId,
+            title: `Demo interest — ${source}`,
+            content: `Source: ${source}${name ? `\nName: ${name}` : ''}\nSubmitted: ${new Date().toISOString()}`,
+          },
+        }),
+      });
+      if (!noteRes.ok) {
+        const noteErr = await noteRes.json().catch(() => ({}));
+        console.error('Attio note error:', noteErr);
+      }
+    } catch (err) {
+      console.error('Attio note fetch error:', err);
+    }
   }
 
   return res.status(200).json({ success: true });

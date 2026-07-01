@@ -9,6 +9,14 @@
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/favicon.png">
 
+  <script src="https://cdn.jsdelivr.net/npm/posthog-js@1/dist/array.full.js"></script>
+  <script>
+    posthog.init('phc_zAxK4LKjZxG5BJsN7g93AvdcZAkQzzKBVA8pjDZvCwtE', {
+      api_host: 'https://eu.i.posthog.com',
+      person_profiles: 'identified_only',
+    });
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
