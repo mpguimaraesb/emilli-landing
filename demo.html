@@ -1102,6 +1102,66 @@
       margin: 0 0 10px; padding-right: 16px;
     }
 
+    /* ─── Feedback notepad (persistent) ─────────────────────── */
+    #feedback-cta {
+      position: fixed; bottom: 62px; right: 20px; z-index: 9998;
+      display: none;
+    }
+    #feedback-cta.show { display: block; }
+
+    .feedback-pill {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--surface2); color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 14px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      transition: opacity 0.2s;
+    }
+    .feedback-pill:hover { opacity: 0.85; }
+
+    .feedback-popover {
+      display: none;
+      position: absolute; bottom: 40px; right: 0;
+      width: 260px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .feedback-popover.show { display: block; }
+    .feedback-popover p {
+      font-size: 12px; font-weight: 300; color: var(--muted);
+      line-height: 1.5; margin: 0 0 10px; padding-right: 14px;
+    }
+
+    .feedback-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: var(--font);
+      font-size: 13px; font-weight: 300;
+      color: var(--text);
+      outline: none; resize: none;
+      transition: border-color 0.2s;
+    }
+    .feedback-input:focus { border-color: rgba(212,105,58,0.4); }
+    .feedback-input::placeholder { color: var(--dim); }
+
+    .feedback-note-list { max-height: 120px; overflow-y: auto; margin-bottom: 8px; }
+    .feedback-note-list:empty { display: none; }
+    .feedback-note-item {
+      display: block; padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px; font-weight: 300; color: var(--muted); line-height: 1.5;
+    }
+    .feedback-note-item:last-child { border-bottom: none; }
+    .feedback-note-screen {
+      display: block; font-size: 10px; font-weight: 500;
+      color: var(--bx); text-transform: uppercase; letter-spacing: 0.03em;
+      margin-bottom: 2px;
+    }
+
     /* ─── Visual cards ──────────────────────────────────────── */
     .vis-card {
       background: var(--surface2);
@@ -2358,6 +2418,20 @@
     </div>
   </div>
 
+  <!-- ─── FEEDBACK NOTEPAD (persistent) ─────────────────────────── -->
+  <div id="feedback-cta">
+    <button class="feedback-pill" onclick="openFeedbackCta()" title="Leave feedback">✎</button>
+    <div class="feedback-popover" id="feedback-popover">
+      <button class="interest-popover-close" onclick="closeFeedbackCta()">✕</button>
+      <p>Notice something? Leave a note — it's tagged to this screen so we can find it later.</p>
+      <div class="feedback-note-list" id="feedback-note-list"></div>
+      <div class="mandate-form show">
+        <textarea class="feedback-input" id="feedback-input" placeholder="What's on your mind?" rows="2"></textarea>
+        <button class="mandate-submit" onclick="submitFeedbackNote()">Save note</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── END-OF-SESSION INTEREST PROMPT ────────────────────────── -->
   <div id="end-prompt">
     <div class="end-prompt-card">
@@ -2777,7 +2851,12 @@
       mandateShown: false,
       interestCaptured: false,
       endCtaShown: false,
+      feedbackNotes: [],
+      feedbackNoteCount: 0,
     };
+
+    let _currentScreen = 'gate';
+    let _currentPhoneScreen = null;
 
     // ─── GATE ─────────────────────────────────────────────────
 
@@ -2906,13 +2985,15 @@
 
     function showScreen(id) {
       posthog.capture('screen_view', { screen: id, persona: state.persona });
+      _currentScreen = id;
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('screen-' + id).classList.add('active');
-      updateInterestCtaVisibility(id);
+      updateFloatingCtaVisibility(id);
     }
 
     function showPhoneScreen(id) {
       posthog.capture('screen_view', { screen: id, phone_screen: true, persona: state.persona });
+      _currentPhoneScreen = id;
       document.querySelectorAll('.p-screen').forEach(s => s.classList.remove('active'));
       document.getElementById('p-' + id).classList.add('active');
       updateAnnotations(id);
@@ -4540,11 +4621,12 @@
 
     // ─── INTEREST CTA ─────────────────────────────────────────
 
-    function updateInterestCtaVisibility(screenId) {
-      const cta = document.getElementById('interest-cta');
-      if (!cta) return;
+    function updateFloatingCtaVisibility(screenId) {
       const visible = screenId !== 'gate' && screenId !== 'intro';
-      cta.classList.toggle('show', visible);
+      const cta = document.getElementById('interest-cta');
+      if (cta) cta.classList.toggle('show', visible);
+      const feedback = document.getElementById('feedback-cta');
+      if (feedback) feedback.classList.toggle('show', visible);
     }
 
     function openInterestCta() {
@@ -4599,6 +4681,48 @@
 
     function dismissEndPrompt() {
       document.getElementById('end-prompt').classList.remove('show');
+    }
+
+    // ─── FEEDBACK NOTEPAD ───────────────────────────────────────
+
+    function openFeedbackCta() {
+      posthog.capture('feedback_cta_opened', { persona: state.persona, screen: _currentScreen, phone_screen: _currentPhoneScreen });
+      document.getElementById('feedback-popover').classList.add('show');
+      document.getElementById('feedback-input').focus();
+    }
+
+    function closeFeedbackCta() {
+      document.getElementById('feedback-popover').classList.remove('show');
+    }
+
+    function submitFeedbackNote() {
+      const input = document.getElementById('feedback-input');
+      const note = input.value.trim().slice(0, 500);
+      if (!note) {
+        input.focus();
+        return;
+      }
+      state.feedbackNoteCount++;
+      posthog.capture('feedback_note', {
+        note,
+        note_index: state.feedbackNoteCount,
+        screen: _currentScreen,
+        phone_screen: _currentPhoneScreen,
+        persona: state.persona,
+      });
+      state.feedbackNotes.push({ note, screen: _currentPhoneScreen || _currentScreen });
+      input.value = '';
+      renderFeedbackNotes();
+    }
+
+    function renderFeedbackNotes() {
+      const list = document.getElementById('feedback-note-list');
+      list.innerHTML = state.feedbackNotes.map(n => `
+        <div class="feedback-note-item">
+          <span class="feedback-note-screen">${escapeHtml(n.screen ?? '')}</span>
+          <span class="feedback-note-text">${escapeHtml(n.note)}</span>
+        </div>`).join('');
+      list.scrollTop = list.scrollHeight;
     }
   </script>
 </body>
