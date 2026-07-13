@@ -1044,36 +1044,28 @@
     /* ─── Interest CTA (persistent) ─────────────────────────── */
     #interest-cta {
       position: fixed; bottom: 20px; left: 20px; z-index: 9998;
+      width: 260px;
       display: none;
     }
     #interest-cta.show { display: block; }
     #interest-cta.done { display: none; }
 
-    .interest-pill {
-      background: var(--bx); color: #f0ede8;
-      border: none; border-radius: 999px;
-      padding: 10px 18px; font-family: var(--font);
-      font-size: 12px; font-weight: 600; cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-      transition: opacity 0.2s;
-    }
-    .interest-pill:hover { opacity: 0.88; }
-
-    .interest-popover {
-      display: none;
-      position: absolute; bottom: 46px; left: 0;
-      width: 250px;
+    .interest-card {
+      position: relative;
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: 14px; padding: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
-    .interest-popover.show { display: block; }
+    .interest-question {
+      font-size: 13px; font-weight: 500; color: var(--text);
+      margin: 0 0 12px; padding-right: 14px;
+    }
     .interest-popover-close {
       position: absolute; top: 8px; right: 10px;
       background: none; border: none; color: var(--dim);
       font-size: 14px; line-height: 1; cursor: pointer;
     }
-    .interest-popover p {
+    .interest-card p:not(.interest-question):not(.mandate-thanks) {
       font-size: 12px; font-weight: 300; color: var(--muted);
       line-height: 1.5; margin: 0 0 10px; padding-right: 14px;
     }
@@ -2072,8 +2064,6 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       margin-bottom: 8px;
-      cursor: pointer;
-      transition: border-color 0.15s;
       -webkit-user-select: none; user-select: none;
     }
     .select-item.checked { border-color: rgba(212,105,58,0.35); }
@@ -2403,18 +2393,26 @@
 
   <!-- ─── INTEREST CTA (persistent) ─────────────────────────────── -->
   <div id="interest-cta">
-    <button class="interest-pill" onclick="openInterestCta()">Get early access</button>
-    <div class="interest-popover" id="interest-popover">
-      <button class="interest-popover-close" onclick="closeInterestCta()">✕</button>
-      <div id="interest-form-fields">
-        <p>Want to be notified when emilli launches? Leave your email and we'll reach out.</p>
+    <div class="interest-card">
+      <button class="interest-popover-close" onclick="dismissInterestCta()">✕</button>
+      <div id="interest-survey">
+        <p class="interest-question">Would you use emilli?</p>
+        <div class="mandate-actions">
+          <button class="mandate-btn yes" onclick="answerSurvey('persistent', true)">Yes</button>
+          <button class="mandate-btn no" onclick="answerSurvey('persistent', false)">No</button>
+        </div>
+      </div>
+      <div id="interest-form-fields" style="display:none">
+        <p>Want early access at a discount? Leave your details below.</p>
         <div class="mandate-form show">
           <input type="text" id="interest-name" placeholder="Your name" autocomplete="name">
           <input type="email" id="interest-email" placeholder="your@email.com" autocomplete="email">
-          <button class="mandate-submit" onclick="submitInterest('persistent')">Notify me</button>
+          <input type="text" id="interest-wtp" placeholder="What would you pay? e.g. 199 SEK/month">
+          <button class="mandate-submit" onclick="submitInterest('persistent')">Get early access</button>
         </div>
       </div>
       <p class="mandate-thanks" id="interest-thanks">Thanks — we'll be in touch.</p>
+      <p class="mandate-thanks" id="interest-no-thanks">Thanks for the honesty — noted.</p>
     </div>
   </div>
 
@@ -2423,7 +2421,7 @@
     <button class="feedback-pill" onclick="openFeedbackCta()" title="Leave feedback">✎</button>
     <div class="feedback-popover" id="feedback-popover">
       <button class="interest-popover-close" onclick="closeFeedbackCta()">✕</button>
-      <p>Notice something? Leave a note — it's tagged to this screen so we can find it later.</p>
+      <p>Leave the team feedback on a page, feature, or the demo overall — we'd love to hear from you!</p>
       <div class="feedback-note-list" id="feedback-note-list"></div>
       <div class="mandate-form show">
         <textarea class="feedback-input" id="feedback-input" placeholder="What's on your mind?" rows="2"></textarea>
@@ -2436,16 +2434,25 @@
   <div id="end-prompt">
     <div class="end-prompt-card">
       <button class="end-prompt-close" onclick="dismissEndPrompt()">✕</button>
-      <div id="end-form-fields">
-        <p class="end-prompt-title">Want to be notified when emilli launches?</p>
-        <p class="mandate-text" style="margin-bottom:12px;">You've had a good look around. Leave your email and we'll let you know the moment it's available.</p>
+      <div id="end-survey">
+        <p class="end-prompt-title">Would you use emilli?</p>
+        <div class="mandate-actions">
+          <button class="mandate-btn yes" onclick="answerSurvey('endprompt', true)">Yes</button>
+          <button class="mandate-btn no" onclick="answerSurvey('endprompt', false)">No</button>
+        </div>
+      </div>
+      <div id="end-form-fields" style="display:none">
+        <p class="end-prompt-title">Want early access at a discount?</p>
+        <p class="mandate-text" style="margin-bottom:12px;">Leave your details below and we'll be in touch.</p>
         <div class="mandate-form show">
           <input type="text" id="end-name" placeholder="Your name" autocomplete="name">
           <input type="email" id="end-email" placeholder="your@email.com" autocomplete="email">
-          <button class="mandate-submit" onclick="submitInterest('endprompt')">Notify me</button>
+          <input type="text" id="end-wtp" placeholder="What would you pay? e.g. 199 SEK/month">
+          <button class="mandate-submit" onclick="submitInterest('endprompt')">Get early access</button>
         </div>
       </div>
       <p class="mandate-thanks" id="end-thanks">Thanks — we'll be in touch. Keep exploring in the meantime.</p>
+      <p class="mandate-thanks" id="end-no-thanks">Thanks for the honesty — noted. Keep exploring in the meantime.</p>
     </div>
   </div>
 
@@ -3325,7 +3332,7 @@
 
       const container = document.getElementById('select-items');
       container.innerHTML = data.connections.map((c, i) => `
-        <div class="select-item checked" id="sel-${i}" onclick="toggleSelectItem(${i})">
+        <div class="select-item checked" id="sel-${i}">
           <div class="select-item-icon" style="background:${c.color}">${escapeHtml(c.icon)}</div>
           <div class="select-item-info">
             <div class="select-item-name">${escapeHtml(c.name)}</div>
@@ -3334,19 +3341,10 @@
           <div class="select-check">✓</div>
         </div>`).join('');
 
-      updateSelectBtn();
-    }
-
-    function toggleSelectItem(i) {
-      document.getElementById('sel-' + i).classList.toggle('checked');
-      updateSelectBtn();
-    }
-
-    function updateSelectBtn() {
-      const checked = document.querySelectorAll('#select-items .select-item.checked').length;
       const btn = document.getElementById('select-btn');
-      btn.textContent = checked > 0 ? `Connect ${checked} account${checked !== 1 ? 's' : ''}` : 'Select at least one account';
-      btn.disabled = checked === 0;
+      const count = data.connections.length;
+      btn.textContent = `Connect ${count} account${count !== 1 ? 's' : ''}`;
+      btn.disabled = false;
     }
 
     function confirmSelection() {
@@ -4629,21 +4627,36 @@
       if (feedback) feedback.classList.toggle('show', visible);
     }
 
-    function openInterestCta() {
-      posthog.capture('interest_cta_opened', { persona: state.persona, source: 'persistent' });
-      document.getElementById('interest-popover').classList.add('show');
-      document.getElementById('interest-email').focus();
+    function dismissInterestCta() {
+      document.getElementById('interest-cta').classList.add('done');
     }
 
-    function closeInterestCta() {
-      document.getElementById('interest-popover').classList.remove('show');
+    function answerSurvey(source, yes) {
+      const prefix = source === 'persistent' ? 'interest' : 'end';
+      posthog.capture('interest_survey_answered', {
+        persona: state.persona, would_use: yes, source,
+        screen: _currentScreen, phone_screen: _currentPhoneScreen,
+      });
+      document.getElementById(prefix + '-survey').style.display = 'none';
+      if (yes) {
+        document.getElementById(prefix + '-form-fields').style.display = 'block';
+        document.getElementById(prefix + '-email').focus();
+      } else {
+        document.getElementById(prefix + '-no-thanks').classList.add('show');
+        if (prefix === 'interest') {
+          setTimeout(() => dismissInterestCta(), 2500);
+        }
+      }
     }
 
     async function submitInterest(source) {
-      const nameInput  = document.getElementById(source === 'persistent' ? 'interest-name' : 'end-name');
-      const emailInput = document.getElementById(source === 'persistent' ? 'interest-email' : 'end-email');
+      const prefix = source === 'persistent' ? 'interest' : 'end';
+      const nameInput  = document.getElementById(prefix + '-name');
+      const emailInput = document.getElementById(prefix + '-email');
+      const wtpInput   = document.getElementById(prefix + '-wtp');
       const name  = nameInput.value.trim();
       const email = emailInput.value.trim();
+      const wtp   = wtpInput.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         emailInput.focus();
         return;
@@ -4653,20 +4666,17 @@
         await fetch('/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name, source: sourceTag }),
+          body: JSON.stringify({ email, name, source: sourceTag, wtp }),
         });
       } catch {}
-      posthog.identify(email, { name });
-      posthog.capture('interest_submitted', { persona: state.persona, source: sourceTag });
+      posthog.identify(email, { name, wtp });
+      posthog.capture('interest_submitted', { persona: state.persona, source: sourceTag, wtp });
       state.interestCaptured = true;
 
+      document.getElementById(prefix + '-form-fields').style.display = 'none';
+      document.getElementById(prefix + '-thanks').classList.add('show');
       if (source === 'persistent') {
-        document.getElementById('interest-form-fields').style.display = 'none';
-        document.getElementById('interest-thanks').classList.add('show');
-        setTimeout(() => { closeInterestCta(); document.getElementById('interest-cta').classList.add('done'); }, 2200);
-      } else {
-        document.getElementById('end-form-fields').style.display = 'none';
-        document.getElementById('end-thanks').classList.add('show');
+        setTimeout(() => dismissInterestCta(), 2200);
       }
     }
 

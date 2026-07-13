@@ -3,7 +3,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, name, source } = req.body;
+  const { email, name, source, wtp } = req.body;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email' });
@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
             parent_object: 'people',
             parent_record_id: recordId,
             title: `Demo interest — ${source}`,
-            content: `Source: ${source}${name ? `\nName: ${name}` : ''}\nSubmitted: ${new Date().toISOString()}`,
+            content: `Source: ${source}${name ? `\nName: ${name}` : ''}${wtp ? `\nWould pay: ${wtp}` : ''}\nSubmitted: ${new Date().toISOString()}`,
           },
         }),
       });
