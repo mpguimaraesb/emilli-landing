@@ -1,3 +1,5 @@
+const { checkChatRateLimit } = require('./_ratelimit');
+
 const VALID_PERSONAS = ['carl', 'sara', 'erik'];
 
 const CHARACTER = `You are emilli. You are a financial advisor — not an assistant, not a chatbot, not a dashboard with a chat window. You are the brilliant friend who actually understands money and asks the right question at the right moment.
@@ -129,6 +131,15 @@ module.exports = async function handler(req, res) {
   }
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > 30) {
     return res.status(400).json({ error: 'Invalid messages' });
+  }
+
+  const ip = (req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown').trim();
+  const rateLimit = await checkChatRateLimit(ip);
+  if (!rateLimit.allowed) {
+    const message = rateLimit.reason === 'global'
+      ? 'emilli is getting a lot of interest right now — please try again later.'
+      : "You've reached the message limit for this demo. Please try again in a bit.";
+    return res.status(429).json({ error: message });
   }
 
   const sanitised = messages.map((m) => ({
