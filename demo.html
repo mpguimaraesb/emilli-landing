@@ -327,15 +327,26 @@
       overflow: hidden;
     }
     /* Scaled via transform (not the non-standard `zoom` property) so that
-       overflow:hidden clipping and getBoundingClientRect stay correct for
-       absolutely-positioned descendants (profile sheet, drawer) once
-       content inside scrolls or resizes — zoom silently broke both. */
-    .phone-content-inner {
+       overflow:hidden clipping stays correct. .phone-content-inner and
+       .phone-overlay-inner are two SEPARATE scaled layers rather than one
+       shared layer: nesting the persistent overlays (profile sheet,
+       drawer) inside the same transformed layer as the scrollable p-screen
+       content triggers a real compositing bug in Chromium where an inner
+       scroller's scrollTop corrupts getBoundingClientRect (and the actual
+       paint position) of unrelated sibling elements in that layer. Keeping
+       the overlays in their own identically-scaled, identically-positioned
+       layer avoids sharing a compositing layer with anything scrollable. */
+    .phone-content-inner,
+    .phone-overlay-inner {
+      position: absolute;
+      inset: 0;
       width: 125%;
       height: 125%;
       transform: scale(0.8);
       transform-origin: top left;
     }
+    .phone-overlay-inner { pointer-events: none; }
+    .phone-overlay-inner > * { pointer-events: auto; }
 
     /* ─── PHONE SCREENS ─────────────────────────────────────── */
 
@@ -2747,13 +2758,16 @@
           </div>
           <p class="chat-cap-note" id="cap-note"></p>
         </div>
+       </div>
 
-        <!-- Profile sheet, portfolio drawer, and snackbar are persistent
-             overlays shared across all phone screens. They live inside
-             .phone-content (rather than as siblings of it) so they share
-             the same zoom-scaled coordinate space as the screens they
-             overlay — outside it, their inset:0 positioning drifts once
-             the underlying content scrolls or resizes. -->
+       <!-- Profile sheet, portfolio drawer, and snackbar are persistent
+            overlays shared across all phone screens. They live in their
+            own .phone-overlay-inner layer — a separate but identically
+            scaled/positioned sibling to .phone-content-inner — rather
+            than nested inside it, since sharing a compositing layer with
+            the scrollable p-screen content corrupts their position once
+            that inner scroller is scrolled. -->
+       <div class="phone-overlay-inner">
         <div class="profile-sheet" id="profile-sheet">
         <div class="profile-sheet-backdrop" onclick="closeProfile()"></div>
         <div class="profile-sheet-panel">
