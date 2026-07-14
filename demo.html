@@ -1048,7 +1048,21 @@
       display: none;
     }
     #interest-cta.show { display: block; }
-    #interest-cta.done { display: none; }
+    #interest-cta.minimized { width: auto; }
+    #interest-cta.minimized .interest-card { display: none; }
+
+    .interest-mini-pill {
+      display: none;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--surface2); color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 14px; cursor: pointer;
+      align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      transition: opacity 0.2s;
+    }
+    .interest-mini-pill:hover { opacity: 0.85; }
+    #interest-cta.minimized .interest-mini-pill { display: flex; }
 
     .interest-card {
       position: relative;
@@ -2393,8 +2407,9 @@
 
   <!-- ─── INTEREST CTA (persistent) ─────────────────────────────── -->
   <div id="interest-cta">
+    <button class="interest-mini-pill" onclick="expandInterestCta()" title="Would you use emilli?">★</button>
     <div class="interest-card">
-      <button class="interest-popover-close" onclick="dismissInterestCta()">✕</button>
+      <button class="interest-popover-close" onclick="minimizeInterestCta()">✕</button>
       <div id="interest-survey">
         <p class="interest-question">Would you use emilli?</p>
         <div class="mandate-actions">
@@ -4627,8 +4642,12 @@
       if (feedback) feedback.classList.toggle('show', visible);
     }
 
-    function dismissInterestCta() {
-      document.getElementById('interest-cta').classList.add('done');
+    function minimizeInterestCta() {
+      document.getElementById('interest-cta').classList.add('minimized');
+    }
+
+    function expandInterestCta() {
+      document.getElementById('interest-cta').classList.remove('minimized');
     }
 
     function answerSurvey(source, yes) {
@@ -4644,7 +4663,7 @@
       } else {
         document.getElementById(prefix + '-no-thanks').classList.add('show');
         if (prefix === 'interest') {
-          setTimeout(() => dismissInterestCta(), 2500);
+          setTimeout(() => minimizeInterestCta(), 2500);
         }
       }
     }
@@ -4676,7 +4695,7 @@
       document.getElementById(prefix + '-form-fields').style.display = 'none';
       document.getElementById(prefix + '-thanks').classList.add('show');
       if (source === 'persistent') {
-        setTimeout(() => dismissInterestCta(), 2200);
+        setTimeout(() => minimizeInterestCta(), 2200);
       }
     }
 
