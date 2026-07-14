@@ -32,7 +32,8 @@ module.exports = async function handler(req, res) {
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     console.error('Attio error:', err);
-    return res.status(500).json({ error: 'Failed to save' });
+    // TEMP: surfacing Attio's actual error for debugging — revert once submissions work.
+    return res.status(500).json({ error: 'Failed to save', debug: { status: response.status, attio: err, keyPresent: !!process.env.ATTIO_API_KEY } });
   }
 
   const record = await response.json().catch(() => ({}));
