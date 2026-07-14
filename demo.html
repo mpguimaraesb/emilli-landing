@@ -2737,10 +2737,14 @@
           </div>
           <p class="chat-cap-note" id="cap-note"></p>
         </div>
-      </div>
 
-      <!-- Profile sheet -->
-      <div class="profile-sheet" id="profile-sheet">
+        <!-- Profile sheet, portfolio drawer, and snackbar are persistent
+             overlays shared across all phone screens. They live inside
+             .phone-content (rather than as siblings of it) so they share
+             the same zoom-scaled coordinate space as the screens they
+             overlay — outside it, their inset:0 positioning drifts once
+             the underlying content scrolls or resizes. -->
+        <div class="profile-sheet" id="profile-sheet">
         <div class="profile-sheet-backdrop" onclick="closeProfile()"></div>
         <div class="profile-sheet-panel">
           <div class="sheet-handle"></div>
@@ -2826,6 +2830,7 @@
 
       <!-- Snackbar -->
       <div class="snackbar" id="snackbar"></div>
+      </div>
     </div>
     </div>
   </div>
