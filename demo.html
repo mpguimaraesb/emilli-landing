@@ -2490,7 +2490,7 @@
   <div id="screen-gate" class="screen">
     <p class="gate-mark">emilli<span class="dot">.</span></p>
     <div class="gate-box">
-      <p class="gate-label">Access code</p>
+      <p class="gate-label" id="gate-label">Access code</p>
       <input
         id="gate-input"
         class="gate-input"
@@ -2857,7 +2857,9 @@
   <script>
     // ─── CONFIG ───────────────────────────────────────────────
 
-    const PASS_HASH = btoa('emilli2026'); // change password by updating this value
+    const PASS_HASH = btoa('emilli2026'); // public password — change this value; stops working after DEMO_EXPIRY
+    const PRIVATE_PASS_HASH = btoa('emilli-private-2026'); // change this — never expires, for hand-picked sharing
+    const DEMO_EXPIRY = new Date('2026-07-19T00:00:00Z'); // public access closes after this date
 
     const MAX_MESSAGES = 15;
 
@@ -2887,17 +2889,36 @@
     });
     document.getElementById('gate-btn').addEventListener('click', attemptGate);
 
+    if (new Date() >= DEMO_EXPIRY) {
+      document.getElementById('gate-label').textContent = 'This demo period has ended — enter access code for private access';
+    }
+
+    function hasValidSession() {
+      const auth = sessionStorage.getItem('emilli-demo-auth');
+      if (auth === 'private') return true;
+      if (auth === 'public') return new Date() < DEMO_EXPIRY;
+      return false;
+    }
+
     function attemptGate() {
       const val = document.getElementById('gate-input').value.trim();
-      if (btoa(val) === PASS_HASH) {
+      const hash = btoa(val);
+      const expired = new Date() >= DEMO_EXPIRY;
+
+      if (hash === PRIVATE_PASS_HASH) {
         showScreen('persona');
-        sessionStorage.setItem('emilli-demo-auth', '1');
-      } else {
-        const err = document.getElementById('gate-error');
-        err.textContent = 'Incorrect access code.';
-        setTimeout(() => err.textContent = '', 2500);
-        document.getElementById('gate-input').value = '';
+        sessionStorage.setItem('emilli-demo-auth', 'private');
+        return;
       }
+      if (hash === PASS_HASH && !expired) {
+        showScreen('persona');
+        sessionStorage.setItem('emilli-demo-auth', 'public');
+        return;
+      }
+      const err = document.getElementById('gate-error');
+      err.textContent = expired ? 'This demo period has ended.' : 'Incorrect access code.';
+      setTimeout(() => err.textContent = '', 2500);
+      document.getElementById('gate-input').value = '';
     }
 
     // ─── INTRO ANIMATION ──────────────────────────────────────
@@ -2914,7 +2935,7 @@
     let _introDone = false;
 
     function startIntro() {
-      if (sessionStorage.getItem('emilli-demo-auth')) {
+      if (hasValidSession()) {
         showScreen('persona');
         return;
       }
@@ -2991,13 +3012,13 @@
 
     function finishIntro() {
       _introDone = true;
-      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 2500, 2000);
+      fadeToScreen(hasValidSession() ? 'persona' : 'gate', 2500, 2000);
     }
 
     function skipIntroAnim() {
       _introDone = true;
       clearTimeout(_introTimer);
-      fadeToScreen(sessionStorage.getItem('emilli-demo-auth') ? 'persona' : 'gate', 600, 800);
+      fadeToScreen(hasValidSession() ? 'persona' : 'gate', 600, 800);
     }
 
     // ─── STARTUP ──────────────────────────────────────────────
