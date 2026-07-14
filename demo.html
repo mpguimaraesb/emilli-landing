@@ -325,7 +325,16 @@
       flex: 1;
       position: relative;
       overflow: hidden;
-      zoom: 0.8;
+    }
+    /* Scaled via transform (not the non-standard `zoom` property) so that
+       overflow:hidden clipping and getBoundingClientRect stay correct for
+       absolutely-positioned descendants (profile sheet, drawer) once
+       content inside scrolls or resizes — zoom silently broke both. */
+    .phone-content-inner {
+      width: 125%;
+      height: 125%;
+      transform: scale(0.8);
+      transform-origin: top left;
     }
 
     /* ─── PHONE SCREENS ─────────────────────────────────────── */
@@ -2607,6 +2616,7 @@
       </div>
 
       <div class="phone-content">
+       <div class="phone-content-inner">
         <!-- Script screen -->
         <div class="p-screen" id="p-script">
           <div class="chat-header">
@@ -2830,6 +2840,7 @@
 
       <!-- Snackbar -->
       <div class="snackbar" id="snackbar"></div>
+       </div>
       </div>
     </div>
     </div>
