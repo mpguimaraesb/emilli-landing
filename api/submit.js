@@ -37,46 +37,40 @@ module.exports = async function handler(req, res) {
 
   const record = await response.json().catch(() => ({}));
   const recordId = record?.data?.id?.record_id;
+  const existingDescription = record?.data?.values?.description?.[0]?.value ?? '';
 
-  // TEMP debug scaffolding — remove once the note path is confirmed working.
-  const debug = { recordId, recordShape: record, noteAttempted: false };
-
-  // Log the interaction as a note rather than a custom attribute, so repeat
-  // touches (mandate today, general interest tomorrow) build a history
-  // instead of overwriting a single field. Failure here shouldn't fail the
-  // request — the person record itself already saved above.
+  // Log the interaction to the Person's own description field rather than a
+  // separate Note — the API key only has People write access, not Notes, and
+  // this avoids needing an extra scope. Appended (not overwritten) so repeat
+  // touches (mandate today, general interest tomorrow) build a history.
   if (recordId && source) {
-    debug.noteAttempted = true;
+    const entry = `Source: ${source}${name ? `, Name: ${name}` : ''}${wtp ? `, Would pay: ${wtp}` : ''} — ${new Date().toISOString()}`;
+    const newDescription = existingDescription ? `${existingDescription}\n${entry}` : entry;
     try {
-      const noteRes = await fetch('https://api.attio.com/v2/notes', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.ATTIO_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {
-            format: 'plaintext',
-            parent_object: 'people',
-            parent_record_id: recordId,
-            title: `Demo interest — ${source}`,
-            content: `Source: ${source}${name ? `\nName: ${name}` : ''}${wtp ? `\nWould pay: ${wtp}` : ''}\nSubmitted: ${new Date().toISOString()}`,
+      const updateRes = await fetch(
+        `https://api.attio.com/v2/objects/people/records/${recordId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${process.env.ATTIO_API_KEY}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      });
-      debug.noteStatus = noteRes.status;
-      if (!noteRes.ok) {
-        const noteErr = await noteRes.json().catch(() => ({}));
-        console.error('Attio note error:', noteErr);
-        debug.noteError = noteErr;
-      } else {
-        debug.noteOk = true;
+          body: JSON.stringify({
+            data: { values: { description: newDescription } },
+          }),
+        }
+      );
+      if (!updateRes.ok) {
+        const updateErr = await updateRes.json().catch(() => ({}));
+        console.error('Attio description update error:', updateErr);
+        // TEMP: remove once confirmed working.
+        return res.status(200).json({ success: true, debug: { updateStatus: updateRes.status, updateErr } });
       }
     } catch (err) {
-      console.error('Attio note fetch error:', err);
-      debug.noteException = String(err);
+      console.error('Attio description update fetch error:', err);
+      return res.status(200).json({ success: true, debug: { updateException: String(err) } });
     }
   }
 
-  return res.status(200).json({ success: true, debug });
+  return res.status(200).json({ success: true });
 };
