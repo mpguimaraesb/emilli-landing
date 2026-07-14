@@ -4586,6 +4586,19 @@
       body.innerHTML = html;
     }
 
+    // Element.scrollIntoView() has a reproducible Chromium bug in this layout:
+    // calling it corrupts getBoundingClientRect (and the actual paint
+    // position) for unrelated sibling elements (profile-sheet, drawer)
+    // afterward, even after the scroll position is reset back to 0. A plain
+    // scrollTop assignment achieving the identical scroll position does not
+    // trigger it, so centering is done manually instead of via the native API.
+    function scrollElementIntoView(el, container) {
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const offset = (elRect.top - containerRect.top) - (containerRect.height / 2) + (elRect.height / 2);
+      container.scrollTop += offset;
+    }
+
     function showProposedPortfolio() {
       posthog.capture('proposed_portfolio_viewed', { persona: state.persona });
       closeDrawer();
@@ -4593,9 +4606,10 @@
       setTimeout(() => {
         const row = document.getElementById('ac-mandate-row');
         if (!row) return;
-        row.scrollIntoView({ behavior: 'instant', block: 'center' });
         const wrap = document.getElementById('ac-mandate-wrap');
         if (wrap && !wrap.classList.contains('open')) togglePositions('ac-mandate');
+        const scrollContainer = document.querySelector('#p-summary .summary-scroll');
+        if (scrollContainer) scrollElementIntoView(row, scrollContainer);
         row.classList.add('highlight');
         setTimeout(() => row.classList.remove('highlight'), 2000);
       }, 350);
