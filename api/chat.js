@@ -200,13 +200,15 @@ module.exports = async function handler(req, res) {
   const data = await response.json();
   const text = data?.content?.[0]?.text ?? '';
 
+  let logDebug = null;
   if (sessionId) {
     const lastUserMessage = sanitised[sanitised.length - 1];
-    await logChatMessages([
+    logDebug = await logChatMessages([
       { session_id: sessionId, persona: personaId, role: 'user', content: lastUserMessage.content, turn: turn ?? null, mandate_triggered: false },
       { session_id: sessionId, persona: personaId, role: 'assistant', content: text, turn: turn ?? null, mandate_triggered: !!triggerMandate },
     ]);
   }
 
-  return res.status(200).json({ content: text });
+  // TEMP: include logDebug in the response for debugging — revert once confirmed working.
+  return res.status(200).json({ content: text, logDebug });
 };
