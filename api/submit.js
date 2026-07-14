@@ -63,12 +63,9 @@ module.exports = async function handler(req, res) {
       if (!updateRes.ok) {
         const updateErr = await updateRes.json().catch(() => ({}));
         console.error('Attio description update error:', updateErr);
-        // TEMP: remove once confirmed working.
-        return res.status(200).json({ success: true, debug: { updateStatus: updateRes.status, updateErr } });
       }
     } catch (err) {
       console.error('Attio description update fetch error:', err);
-      return res.status(200).json({ success: true, debug: { updateException: String(err) } });
     }
   }
 
