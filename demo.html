@@ -34,25 +34,6 @@
       --font:       'Lexend', system-ui, sans-serif;
     }
 
-    body[data-outer="light"] { background: #eeedec !important; }
-    body[data-outer="light"] #screen-persona,
-    body[data-outer="light"] #screen-intro { background: #eeedec !important; }
-
-    #bg-toggle {
-      position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
-      font-size: 15px; cursor: pointer; display: flex;
-      align-items: center; justify-content: center;
-      backdrop-filter: blur(4px); transition: opacity 0.2s;
-    }
-    #bg-toggle:hover { opacity: 0.8; }
-    body[data-outer="light"] #bg-toggle {
-      border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.06);
-      color: rgba(0,0,0,0.4);
-    }
-
     html, body {
       height: 100%;
       background: var(--bg);
@@ -645,7 +626,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(to top, var(--surface) 60%, rgba(20,18,16,0.92) 80%, transparent);
+      background: linear-gradient(to top, var(--surface) 60%, var(--surface) 80%, transparent);
       padding: 40px 16px 16px;
       opacity: 0;
       transform: translateY(12px);
@@ -1110,7 +1091,7 @@
 
     /* ─── Feedback notepad (persistent) ─────────────────────── */
     #feedback-cta {
-      position: fixed; bottom: 62px; right: 20px; z-index: 9998;
+      position: fixed; bottom: 20px; right: 20px; z-index: 9998;
       display: none;
     }
     #feedback-cta.show { display: block; }
@@ -1329,8 +1310,8 @@
       flex-shrink: 0;
     }
 
-    /* ─── Light theme ───────────────────────────────────────── */
-    [data-theme="light"] {
+    /* ─── Light theme (scoped to the phone frame only) ───────── */
+    .phone-frame[data-theme="light"] {
       --bg:         #f0ece6;
       --surface:    #faf8f5;
       --surface2:   #f0ece6;
@@ -1340,11 +1321,9 @@
       --dim:        rgba(26,23,20,0.28);
       --bx-bubble:  #f5e8e8;
       --bx-border:  rgba(122,31,31,0.2);
+      background: var(--surface); border-color: #ccc9c4;
     }
-    [data-theme="light"] html,
-    [data-theme="light"] body { background: var(--bg); }
-    [data-theme="light"] .phone-frame { background: var(--surface); border-color: #ccc9c4; }
-    [data-theme="light"] .phone-island { background: #1a1714; }
+    .phone-frame[data-theme="light"] .phone-island { background: #1a1714; }
 
     /* ─── Profile circle ─────────────────────────────────────── */
     .summary-profile-btn {
@@ -2402,9 +2381,6 @@
 </head>
 <body>
 
-  <!-- ─── BG TOGGLE (for screenshots) ─────────────────────────── -->
-  <button id="bg-toggle" onclick="toggleOuterBg()" title="Toggle background">◑</button>
-
   <!-- ─── INTEREST CTA (persistent) ─────────────────────────────── -->
   <div id="interest-cta">
     <button class="interest-mini-pill" onclick="expandInterestCta()" title="Would you use emilli?">★</button>
@@ -3040,6 +3016,11 @@
       document.querySelectorAll('.p-screen').forEach(s => s.classList.remove('active'));
       document.getElementById('p-' + id).classList.add('active');
       updateAnnotations(id);
+      // Profile sheet and drawer are persistent overlays shared across all
+      // phone screens — close them on every navigation so a forgotten-open
+      // sheet doesn't reappear on top of whichever screen comes next.
+      closeProfile();
+      closeDrawer();
     }
 
     const PERSONA_ANNS   = ['ann-persona'];
@@ -4469,14 +4450,10 @@
     }
 
     function toggleTheme() {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+      const frame = document.querySelector('.phone-frame');
+      const isLight = frame.getAttribute('data-theme') === 'light';
+      frame.setAttribute('data-theme', isLight ? 'dark' : 'light');
       document.getElementById('theme-toggle').classList.toggle('on', !isLight);
-    }
-
-    function toggleOuterBg() {
-      const isLight = document.body.getAttribute('data-outer') === 'light';
-      document.body.setAttribute('data-outer', isLight ? 'dark' : 'light');
     }
 
     // ─── PORTFOLIO DRAWER ─────────────────────────────────────
