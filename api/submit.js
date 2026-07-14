@@ -38,11 +38,15 @@ module.exports = async function handler(req, res) {
   const record = await response.json().catch(() => ({}));
   const recordId = record?.data?.id?.record_id;
 
+  // TEMP debug scaffolding — remove once the note path is confirmed working.
+  const debug = { recordId, recordShape: record, noteAttempted: false };
+
   // Log the interaction as a note rather than a custom attribute, so repeat
   // touches (mandate today, general interest tomorrow) build a history
   // instead of overwriting a single field. Failure here shouldn't fail the
   // request — the person record itself already saved above.
   if (recordId && source) {
+    debug.noteAttempted = true;
     try {
       const noteRes = await fetch('https://api.attio.com/v2/notes', {
         method: 'POST',
@@ -60,14 +64,19 @@ module.exports = async function handler(req, res) {
           },
         }),
       });
+      debug.noteStatus = noteRes.status;
       if (!noteRes.ok) {
         const noteErr = await noteRes.json().catch(() => ({}));
         console.error('Attio note error:', noteErr);
+        debug.noteError = noteErr;
+      } else {
+        debug.noteOk = true;
       }
     } catch (err) {
       console.error('Attio note fetch error:', err);
+      debug.noteException = String(err);
     }
   }
 
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, debug });
 };
