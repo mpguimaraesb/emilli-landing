@@ -4593,7 +4593,7 @@
       setTimeout(() => {
         const row = document.getElementById('ac-mandate-row');
         if (!row) return;
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.scrollIntoView({ behavior: 'instant', block: 'center' });
         const wrap = document.getElementById('ac-mandate-wrap');
         if (wrap && !wrap.classList.contains('open')) togglePositions('ac-mandate');
         row.classList.add('highlight');
