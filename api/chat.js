@@ -1,4 +1,5 @@
 const { checkChatRateLimit } = require('./_ratelimit');
+const { logChatMessages } = require('./_supabase');
 
 const VALID_PERSONAS = ['carl', 'sara', 'erik'];
 
@@ -121,7 +122,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Server misconfiguration: missing API key' });
   }
 
-  const { personaId, messages, portfolioPromptText, triggerMandate } = req.body ?? {};
+  const { personaId, messages, portfolioPromptText, triggerMandate, sessionId, turn } = req.body ?? {};
 
   if (!personaId || !VALID_PERSONAS.includes(personaId)) {
     return res.status(400).json({ error: 'Invalid persona' });
@@ -198,5 +199,14 @@ module.exports = async function handler(req, res) {
 
   const data = await response.json();
   const text = data?.content?.[0]?.text ?? '';
+
+  if (sessionId) {
+    const lastUserMessage = sanitised[sanitised.length - 1];
+    await logChatMessages([
+      { session_id: sessionId, persona: personaId, role: 'user', content: lastUserMessage.content, turn: turn ?? null, mandate_triggered: false },
+      { session_id: sessionId, persona: personaId, role: 'assistant', content: text, turn: turn ?? null, mandate_triggered: !!triggerMandate },
+    ]);
+  }
+
   return res.status(200).json({ content: text });
 };

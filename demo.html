@@ -2876,6 +2876,7 @@
       endCtaShown: false,
       feedbackNotes: [],
       feedbackNoteCount: 0,
+      chatSessionId: null,
     };
 
     let _currentScreen = 'gate';
@@ -3891,6 +3892,7 @@
       state.userTurns = 0;
       state.mandateShown = false;
       state._shownVisuals = new Set();
+      state.chatSessionId = crypto.randomUUID();
       document.getElementById('chat-messages').innerHTML = `
         <div class="typing-indicator" id="typing">
           <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
@@ -4287,6 +4289,8 @@
             messages: state.messages,
             portfolioPromptText: state.portfolioPromptText,
             triggerMandate: shouldTriggerMandate,
+            sessionId: state.chatSessionId,
+            turn: state.userTurns,
           }),
         });
         const data = await res.json();
