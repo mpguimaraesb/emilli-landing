@@ -5,10 +5,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // (server-only, bypasses RLS) — never expose this key to the browser.
 // Fails silently: a logging hiccup should never break the chat response.
 async function logChatMessages(rows) {
-  // TEMP: returns diagnostic info for debugging — revert to void/silent once confirmed working.
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return { skipped: true, urlPresent: !!SUPABASE_URL, keyPresent: !!SUPABASE_SERVICE_ROLE_KEY };
-  }
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/demo_chat_messages`, {
       method: 'POST',
@@ -23,12 +20,9 @@ async function logChatMessages(rows) {
     if (!res.ok) {
       const err = await res.text();
       console.error('Supabase chat log error:', res.status, err);
-      return { ok: false, status: res.status, err };
     }
-    return { ok: true, status: res.status };
   } catch (err) {
     console.error('Supabase chat log fetch error:', err);
-    return { ok: false, exception: String(err) };
   }
 }
 
