@@ -2902,6 +2902,18 @@
       return false;
     }
 
+    // Whether to skip the intro animation is its own concern, separate from
+    // gate auth — when GATE_ENABLED is false, hasValidSession() is always
+    // true, which would otherwise skip the intro for every first-time
+    // visitor too. Tracked independently so re-enabling the gate later
+    // restores the exact original combined behavior.
+    function hasSeenIntroThisSession() {
+      return sessionStorage.getItem('emilli-intro-seen') === '1';
+    }
+    function markIntroSeen() {
+      sessionStorage.setItem('emilli-intro-seen', '1');
+    }
+
     function attemptGate() {
       const val = document.getElementById('gate-input').value.trim();
       const hash = btoa(val);
@@ -2937,7 +2949,7 @@
     let _introDone = false;
 
     function startIntro() {
-      if (hasValidSession()) {
+      if (GATE_ENABLED ? hasValidSession() : hasSeenIntroThisSession()) {
         showScreen('persona');
         return;
       }
@@ -3014,12 +3026,14 @@
 
     function finishIntro() {
       _introDone = true;
+      markIntroSeen();
       fadeToScreen(hasValidSession() ? 'persona' : 'gate', 2500, 2000);
     }
 
     function skipIntroAnim() {
       _introDone = true;
       clearTimeout(_introTimer);
+      markIntroSeen();
       fadeToScreen(hasValidSession() ? 'persona' : 'gate', 600, 800);
     }
 
